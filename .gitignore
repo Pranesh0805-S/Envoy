@@ -9,6 +9,7 @@ extension/node_modules/
 .env.local
 .env.*.local
 backend/.env
+frontend/.env
 
 # Build outputs
 dist/
