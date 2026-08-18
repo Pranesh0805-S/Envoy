@@ -2,13 +2,11 @@ const { google } = require('googleapis')
 const { getOAuthClient } = require('../config/googleApis')
 const supabase = require('../config/supabase')
 
-// Refreshes and persists a new access token if needed
 async function getFreshAccessToken(userId, accessToken, refreshToken) {
   const oAuth2Client = getOAuthClient(accessToken, refreshToken)
 
   try {
     const { credentials } = await oAuth2Client.refreshAccessToken()
-    // Save the refreshed token back to Supabase
     await supabase
       .from('users')
       .update({
@@ -80,4 +78,34 @@ async function getInboxDigest(userId) {
   return digest
 }
 
-module.exports = { getInboxDigest, getFreshAccessToken }
+async function deleteEmail(userId, emailId) {
+  const { data: user } = await supabase
+    .from('users')
+    .select('google_access_token, google_refresh_token')
+    .eq('id', userId)
+    .single()
+
+  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+  const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
+
+  await gmail.users.messages.trash({ userId: 'me', id: emailId })
+}
+
+async function archiveEmail(userId, emailId) {
+  const { data: user } = await supabase
+    .from('users')
+    .select('google_access_token, google_refresh_token')
+    .eq('id', userId)
+    .single()
+
+  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+  const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
+
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: emailId,
+    requestBody: { removeLabelIds: ['INBOX'] },
+  })
+}
+
+module.exports = { getInboxDigest, getFreshAccessToken, deleteEmail, archiveEmail }

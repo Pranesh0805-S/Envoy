@@ -36,10 +36,17 @@ Respond with ONLY a JSON array, no prose. Format:
 
   const responseText = message.content[0].text
 
+  // Strip markdown code fences if present
+  const cleaned = responseText
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim()
+
   try {
-    return JSON.parse(responseText)
+    return JSON.parse(cleaned)
   } catch (err) {
-    console.error('Failed to parse agent response as JSON:', responseText)
+    console.error('Failed to parse agent response as JSON:', cleaned)
     throw new Error('Agent returned invalid JSON')
   }
 }
