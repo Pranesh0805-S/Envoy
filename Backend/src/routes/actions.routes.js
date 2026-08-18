@@ -28,6 +28,7 @@ router.get('/pending', verifyAuth, async (req, res) => {
 // Approve — actually executes the Gmail action
 router.post('/:id/approve', verifyAuth, async (req, res) => {
   try {
+    console.log('Approve called with id:', req.params.id, 'user:', req.user.id)
     const action = await updateActionStatus(req.user.id, req.params.id, 'approved')
 
     if (action.action_type === 'delete') {
@@ -38,6 +39,7 @@ router.post('/:id/approve', verifyAuth, async (req, res) => {
 
     res.json({ success: true, action })
   } catch (err) {
+    console.error('Approve error:', err.message, 'for id:', req.params.id)
     res.status(500).json({ error: err.message })
   }
 })

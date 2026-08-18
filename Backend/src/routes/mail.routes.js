@@ -17,7 +17,14 @@ router.get('/digest-smart', verifyAuth, async (req, res) => {
   try {
     const digest = await getInboxDigest(req.user.id)
     const categorized = await categorizeInbox(digest)
-    res.json({ digest, categorized })
+
+    // Merge real Gmail message IDs back using array position
+    const merged = categorized.map((item, i) => ({
+      ...item,
+      gmailId: digest[i]?.id,
+    }))
+
+    res.json({ digest, categorized: merged })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
