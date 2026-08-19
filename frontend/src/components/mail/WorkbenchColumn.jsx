@@ -1,6 +1,6 @@
 import MailCard from './MailCard'
 
-function WorkbenchColumn({ title, mails, onPropose, onBulkAction }) {
+function WorkbenchColumn({ title, mails, onPropose, onBulkAction, onAddToCalendar }) {
   return (
     <div className="flex flex-col gap-3 min-w-[280px] max-w-[320px]">
       <div className="flex justify-between items-center px-1">
@@ -19,7 +19,12 @@ function WorkbenchColumn({ title, mails, onPropose, onBulkAction }) {
 
       <div className="flex flex-col gap-3 max-h-[70vh] overflow-y-auto pr-1">
         {mails.map((mail, i) => (
-          <MailCard key={mail.gmailId || i} mail={mail} onPropose={onPropose} />
+          <MailCard
+            key={mail.gmailId || i}
+            mail={mail}
+            onPropose={onPropose}
+            onAddToCalendar={onAddToCalendar}
+          />
         ))}
         {mails.length === 0 && (
           <p className="text-xs text-white/30 text-center py-6">Nothing here</p>

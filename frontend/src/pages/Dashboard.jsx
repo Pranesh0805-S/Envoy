@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useInboxData } from '../hooks/useInboxData'
 import WorkbenchColumn from '../components/mail/WorkbenchColumn'
+import { supabase } from '../lib/supabaseClient'
 
 const CATEGORY_ORDER = [
   'Urgent',
@@ -36,6 +37,35 @@ function Dashboard() {
     }
   }
 
+  async function handleAddToCalendar(mail) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const start = new Date(mail.meetingTime)
+    const end = new Date(start.getTime() + 60 * 60 * 1000) // default 1hr duration
+
+    try {
+      const res = await fetch('http://localhost:5000/api/calendar/create-event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          summary: mail.summary,
+          description: `Auto-created by Envoy from a detected meeting email.`,
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      alert('Event added to your calendar!')
+    } catch (err) {
+      alert(`Failed to add event: ${err.message}`)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="flex justify-between items-center mb-6">
@@ -59,6 +89,7 @@ function Dashboard() {
             mails={grouped[cat] || []}
             onPropose={proposeAction}
             onBulkAction={cat === 'Newsletter/Promotional' ? handleBulkAction : null}
+            onAddToCalendar={handleAddToCalendar}
           />
         ))}
       </div>
