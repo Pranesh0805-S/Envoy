@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useInboxData } from '../hooks/useInboxData'
 import WorkbenchColumn from '../components/mail/WorkbenchColumn'
 import { supabase } from '../lib/supabaseClient'
+import FloatingAvatar from '../components/avatar/FloatingAvatar'
 
 const CATEGORY_ORDER = [
   'Urgent',
@@ -127,6 +128,8 @@ function Dashboard() {
           })}
         </div>
       )}
+
+      <FloatingAvatar />
     </div>
   )
 }
