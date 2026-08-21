@@ -1,13 +1,15 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { signInWithGoogle } from './lib/auth'
 import Dashboard from './pages/Dashboard'
+import { useTheme } from './hooks/useTheme'
 
 function Home() {
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <button
         onClick={signInWithGoogle}
-        className="bg-white text-black px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
+        className="glass-panel glass-btn px-6 py-3 rounded-xl font-semibold"
+        style={{ color: 'var(--text-primary)' }}
       >
         Sign in with Google
       </button>
@@ -16,6 +18,8 @@ function Home() {
 }
 
 function App() {
+  useTheme() // applies theme globally on mount + listens for changes
+
   return (
     <BrowserRouter>
       <Routes>

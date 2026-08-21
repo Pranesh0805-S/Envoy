@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useInboxData } from '../hooks/useInboxData'
-import WorkbenchColumn from '../components/mail/WorkbenchColumn'
+import MailCard from '../components/mail/MailCard'
 import { supabase } from '../lib/supabaseClient'
 import FloatingAvatar from '../components/avatar/FloatingAvatar'
+import Sidebar from '../components/ui/Sidebar'
 
 const CATEGORY_ORDER = [
   'Urgent',
@@ -27,6 +28,8 @@ function Dashboard() {
     rejectAction,
   } = useInboxData()
 
+  const [activeTab, setActiveTab] = useState('Newsletter/Promotional')
+
   useEffect(() => {
     fetchDigest()
     fetchPendingActions()
@@ -43,7 +46,7 @@ function Dashboard() {
     if (!session) return
 
     const start = new Date(mail.meetingTime)
-    const end = new Date(start.getTime() + 60 * 60 * 1000) // default 1hr duration
+    const end = new Date(start.getTime() + 60 * 60 * 1000)
 
     try {
       const res = await fetch('http://localhost:5000/api/calendar/create-event', {
@@ -67,14 +70,16 @@ function Dashboard() {
     }
   }
 
+  const activeMails = grouped[activeTab] || []
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen p-6 pb-32 pl-24" style={{ color: 'var(--text-primary)' }}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Envoy Workbench</h1>
+        <h1 className="text-2xl font-bold tracking-tight ml-2">Envoy Workbench</h1>
         <button
           onClick={fetchDigest}
           disabled={loading}
-          className="px-4 py-2 bg-white text-black rounded-lg font-semibold hover:bg-gray-200 transition disabled:opacity-50"
+          className="px-4 py-2 bg-white text-black rounded-xl font-semibold hover:bg-white/90 transition disabled:opacity-50"
         >
           {loading ? 'Refreshing...' : 'Refresh Inbox'}
         </button>
@@ -82,21 +87,56 @@ function Dashboard() {
 
       {error && <p className="text-red-400 mb-4">Error: {error}</p>}
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {CATEGORY_ORDER.map((cat) => (
-          <WorkbenchColumn
-            key={cat}
-            title={cat}
-            mails={grouped[cat] || []}
+      {/* Tab bar */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {CATEGORY_ORDER.map((cat) => {
+          const count = (grouped[cat] || []).length
+          const isActive = activeTab === cat
+          return (
+            <button
+              key={cat}
+              onClick={() => setActiveTab(cat)}
+              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition ${
+                isActive
+                  ? 'bg-white text-black'
+                  : 'glass-panel text-white/60 hover:text-white/90'
+              }`}
+            >
+              {cat} <span className="opacity-60 ml-1">{count}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Bulk action for current tab, if Newsletter/Promotional */}
+      {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
+        <button
+          onClick={() => handleBulkAction(activeMails, 'archive')}
+          className="mb-4 text-xs px-4 py-2.5 glass-panel rounded-xl transition text-white/60 hover:text-white/90"
+        >
+          Archive all {activeMails.length}
+        </button>
+      )}
+
+      {/* Card grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {activeMails.map((mail, i) => (
+          <MailCard
+            key={mail.gmailId || i}
+            mail={mail}
             onPropose={proposeAction}
-            onBulkAction={cat === 'Newsletter/Promotional' ? handleBulkAction : null}
             onAddToCalendar={handleAddToCalendar}
           />
         ))}
+        {activeMails.length === 0 && (
+          <p className="text-sm text-white/30 col-span-full text-center py-16">
+            Nothing here
+          </p>
+        )}
       </div>
 
       {pendingActions.length > 0 && (
-        <div className="fixed bottom-4 right-4 w-80 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-4 space-y-3">
+        <div className="fixed bottom-24 right-6 w-80 glass-panel-strong rounded-2xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto">
           <h3 className="font-semibold text-sm">Pending Approvals ({pendingActions.length})</h3>
           {pendingActions.map((action) => {
             if (!action?.id) return null
@@ -109,7 +149,8 @@ function Dashboard() {
                       e.currentTarget.disabled = true
                       approveAction(action.id)
                     }}
-                    className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded disabled:opacity-40"
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ background: 'rgba(94, 240, 163, 0.15)', color: 'var(--color-accent-success)' }}
                   >
                     Approve
                   </button>
@@ -118,7 +159,7 @@ function Dashboard() {
                       e.currentTarget.disabled = true
                       rejectAction(action.id)
                     }}
-                    className="text-xs px-2 py-1 bg-white/10 rounded disabled:opacity-40"
+                    className="text-xs px-2 py-1 bg-white/10 rounded"
                   >
                     Reject
                   </button>
@@ -129,6 +170,7 @@ function Dashboard() {
         </div>
       )}
 
+      <Sidebar />
       <FloatingAvatar />
     </div>
   )

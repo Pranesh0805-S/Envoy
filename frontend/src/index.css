@@ -1,1 +1,82 @@
 @import "tailwindcss";
+
+@theme {
+  --font-display: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* Warm neutral — dark mode (default) */
+  --bg-base: #1a1816;
+  --bg-elevated: #211f1c;
+  --text-primary: #f5f0ea;
+  --text-secondary: rgba(245, 240, 234, 0.6);
+  --text-muted: rgba(245, 240, 234, 0.35);
+
+  --glass-fill: rgba(255, 250, 245, 0.05);
+  --glass-fill-strong: rgba(255, 250, 245, 0.09);
+  --glass-border: rgba(255, 250, 245, 0.1);
+
+  --accent-primary: #c8a876;
+  --accent-warm: #e0a05e;
+  --accent-danger: #e0716e;
+  --accent-success: #7ec98f;
+}
+
+[data-theme="light"] {
+  --bg-base: #f7f3ee;
+  --bg-elevated: #ffffff;
+  --text-primary: #2a2622;
+  --text-secondary: rgba(42, 38, 34, 0.65);
+  --text-muted: rgba(42, 38, 34, 0.4);
+
+  --glass-fill: rgba(30, 25, 20, 0.04);
+  --glass-fill-strong: rgba(30, 25, 20, 0.07);
+  --glass-border: rgba(30, 25, 20, 0.08);
+
+  --accent-primary: #a8824f;
+  --accent-warm: #c9843f;
+  --accent-danger: #c9564f;
+  --accent-success: #4f9e63;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.glass-panel {
+  background: var(--glass-fill);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-strong {
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apple-style press/hover feel */
+.glass-btn {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.2s ease,
+              box-shadow 0.2s ease;
+}
+.glass-btn:hover {
+  transform: translateY(-1px);
+}
+.glass-btn:active {
+  transform: scale(0.97) translateY(0px);
+}
