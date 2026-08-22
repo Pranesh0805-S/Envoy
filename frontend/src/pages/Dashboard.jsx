@@ -4,6 +4,7 @@ import MailCard from '../components/mail/MailCard'
 import { supabase } from '../lib/supabaseClient'
 import FloatingAvatar from '../components/avatar/FloatingAvatar'
 import Sidebar from '../components/ui/Sidebar'
+import Toast from '../components/ui/Toast'
 
 const CATEGORY_ORDER = [
   'Urgent',
@@ -29,6 +30,7 @@ function Dashboard() {
   } = useInboxData()
 
   const [activeTab, setActiveTab] = useState('Newsletter/Promotional')
+  const [toastMessage, setToastMessage] = useState(null)
 
   useEffect(() => {
     fetchDigest()
@@ -64,9 +66,9 @@ function Dashboard() {
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
-      alert('Event added to your calendar!')
+      setToastMessage('Event added to your calendar!')
     } catch (err) {
-      alert(`Failed to add event: ${err.message}`)
+      setToastMessage(`Failed to add event: ${err.message}`)
     }
   }
 
@@ -79,13 +81,14 @@ function Dashboard() {
         <button
           onClick={fetchDigest}
           disabled={loading}
-          className="px-4 py-2 bg-white text-black rounded-xl font-semibold hover:bg-white/90 transition disabled:opacity-50"
+          className="px-4 py-2 rounded-xl font-semibold transition disabled:opacity-50 glass-btn"
+          style={{ background: 'var(--accent-primary)', color: 'white' }}
         >
           {loading ? 'Refreshing...' : 'Refresh Inbox'}
         </button>
       </div>
 
-      {error && <p className="text-red-400 mb-4">Error: {error}</p>}
+      {error && <p className="mb-4" style={{ color: 'var(--accent-danger)' }}>Error: {error}</p>}
 
       {/* Tab bar */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -96,11 +99,12 @@ function Dashboard() {
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition ${
+              className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+              style={
                 isActive
-                  ? 'bg-white text-black'
-                  : 'glass-panel text-white/60 hover:text-white/90'
-              }`}
+                  ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+                  : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
+              }
             >
               {cat} <span className="opacity-60 ml-1">{count}</span>
             </button>
@@ -112,7 +116,8 @@ function Dashboard() {
       {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
         <button
           onClick={() => handleBulkAction(activeMails, 'archive')}
-          className="mb-4 text-xs px-4 py-2.5 glass-panel rounded-xl transition text-white/60 hover:text-white/90"
+          className="mb-4 text-xs px-4 py-2.5 rounded-xl transition glass-panel glass-btn"
+          style={{ color: 'var(--text-secondary)' }}
         >
           Archive all {activeMails.length}
         </button>
@@ -129,7 +134,7 @@ function Dashboard() {
           />
         ))}
         {activeMails.length === 0 && (
-          <p className="text-sm text-white/30 col-span-full text-center py-16">
+          <p className="text-sm col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
             Nothing here
           </p>
         )}
@@ -137,11 +142,17 @@ function Dashboard() {
 
       {pendingActions.length > 0 && (
         <div className="fixed bottom-24 right-6 w-80 glass-panel-strong rounded-2xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto">
-          <h3 className="font-semibold text-sm">Pending Approvals ({pendingActions.length})</h3>
+          <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+            Pending Approvals ({pendingActions.length})
+          </h3>
           {pendingActions.map((action) => {
             if (!action?.id) return null
             return (
-              <div key={action.id} className="flex justify-between items-center text-sm bg-white/5 rounded-lg p-2">
+              <div
+                key={action.id}
+                className="flex justify-between items-center text-sm rounded-lg p-2"
+                style={{ background: 'var(--glass-fill)', color: 'var(--text-primary)' }}
+              >
                 <span className="capitalize">{action.action_type}</span>
                 <div className="flex gap-2">
                   <button
@@ -149,8 +160,8 @@ function Dashboard() {
                       e.currentTarget.disabled = true
                       approveAction(action.id)
                     }}
-                    className="text-xs px-2 py-1 rounded"
-                    style={{ background: 'rgba(94, 240, 163, 0.15)', color: 'var(--color-accent-success)' }}
+                    className="text-xs px-2 py-1 rounded glass-btn"
+                    style={{ background: 'rgba(126, 201, 143, 0.15)', color: 'var(--accent-success)' }}
                   >
                     Approve
                   </button>
@@ -159,7 +170,8 @@ function Dashboard() {
                       e.currentTarget.disabled = true
                       rejectAction(action.id)
                     }}
-                    className="text-xs px-2 py-1 bg-white/10 rounded"
+                    className="text-xs px-2 py-1 rounded glass-btn"
+                    style={{ background: 'var(--glass-fill-strong)', color: 'var(--text-secondary)' }}
                   >
                     Reject
                   </button>
@@ -170,6 +182,7 @@ function Dashboard() {
         </div>
       )}
 
+      <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
       <Sidebar />
       <FloatingAvatar />
     </div>

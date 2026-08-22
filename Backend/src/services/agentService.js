@@ -14,7 +14,7 @@ async function categorizeInbox(emails) {
 
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 1000,
+    max_tokens: 1500,
     system: `You are Envoy, a Gmail management assistant. You help users understand and manage their inbox efficiently.
 
 When given a list of emails (subject, sender, date, snippet), you:
@@ -23,15 +23,17 @@ When given a list of emails (subject, sender, date, snippet), you:
 3. Flag anything that looks like a scheduling/meeting request (isMeeting: true/false).
 4. If isMeeting is true AND the email mentions a specific date and time, extract it into a "meetingTime" field as an ISO 8601 datetime string (e.g. "2026-08-27T10:15:00"). If isMeeting is true but no specific date/time is mentioned, set "meetingTime" to null. If isMeeting is false, always set "meetingTime" to null.
 5. Write a short, clear one-line summary for each email
-6. Never delete, archive, or send anything yourself — you only categorize and suggest.
+6. Give a "confidence" score (integer 0-100) reflecting how certain you are about the category assignment. Use high confidence (85+) for clear-cut cases like obvious bank alerts or obvious newsletters; use lower confidence (50-70) for ambiguous or borderline emails.
+7. Give a short "reasoning" string (under 15 words) explaining the single strongest signal that led to this categorization — e.g. "Sender domain is a known bank" or "Contains promotional language and unsubscribe link".
+8. Never delete, archive, or send anything yourself — you only categorize and suggest.
 
-You must always include the "meetingTime" key in every object, even when its value is null.
+You must always include "meetingTime", "confidence", and "reasoning" keys in every object.
 
 Respond with ONLY a JSON array, no prose. Format:
-[{"id": "1", "category": "Job/Career", "needsAction": false, "isMeeting": false, "meetingTime": null, "summary": "..."}]
+[{"id": "1", "category": "Job/Career", "needsAction": false, "isMeeting": false, "meetingTime": null, "confidence": 92, "reasoning": "Sender is LinkedIn Job Alerts, standard job posting format.", "summary": "..."}]
 
 Example with a meeting:
-{"id": "9", "category": "Newsletter/Promotional", "needsAction": true, "isMeeting": true, "meetingTime": "2026-08-27T10:15:00", "summary": "Google Cloud webinar invitation on August 27, 2026 at 10:15 AM IST."}`,
+{"id": "9", "category": "Newsletter/Promotional", "needsAction": true, "isMeeting": true, "meetingTime": "2026-08-27T10:15:00", "confidence": 88, "reasoning": "Explicit webinar invite with clear date and time stated.", "summary": "Google Cloud webinar invitation on August 27, 2026 at 10:15 AM IST."}`,
     messages: [
       {
         role: 'user',

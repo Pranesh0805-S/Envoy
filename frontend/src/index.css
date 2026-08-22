@@ -80,3 +80,28 @@ body {
 .glass-btn:active {
   transform: scale(0.97) translateY(0px);
 }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-fill-strong);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Style native date/time inputs to fit the glass theme better */
+input[type="date"], input[type="time"] {
+  color-scheme: dark;
+}
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="time"] {
+  color-scheme: light;
+}
