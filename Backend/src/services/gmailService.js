@@ -168,10 +168,63 @@ async function getAwaitingReplies(userId, daysThreshold = 3) {
   return awaitingReplies
 }
 
+async function getUnsubscribeCandidates(userId) {
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('google_access_token, google_refresh_token')
+    .eq('id', userId)
+    .single()
+
+  if (error || !user?.google_refresh_token) {
+    throw new Error('No Google account linked for this user')
+  }
+
+  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+  const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
+
+  const listRes = await gmail.users.messages.list({
+    userId: 'me',
+    maxResults: 20,
+    q: 'in:inbox',
+  })
+
+  const messages = listRes.data.messages || []
+  const candidates = []
+
+  for (const msg of messages) {
+    const detail = await gmail.users.messages.get({
+      userId: 'me',
+      id: msg.id,
+      format: 'metadata',
+      metadataHeaders: ['Subject', 'From', 'List-Unsubscribe'],
+    })
+
+    const headers = detail.data.payload.headers
+    const getHeader = (name) => headers.find((h) => h.name === name)?.value || ''
+    const unsubHeader = getHeader('List-Unsubscribe')
+
+    if (unsubHeader) {
+      const urlMatch = unsubHeader.match(/<(https?:\/\/[^>]+)>/)
+      const mailtoMatch = unsubHeader.match(/<mailto:([^>]+)>/)
+
+      candidates.push({
+        id: msg.id,
+        subject: getHeader('Subject'),
+        from: getHeader('From'),
+        unsubscribeUrl: urlMatch ? urlMatch[1] : null,
+        unsubscribeMailto: mailtoMatch ? mailtoMatch[1] : null,
+      })
+    }
+  }
+
+  return candidates
+}
+
 module.exports = {
   getInboxDigest,
   getFreshAccessToken,
   deleteEmail,
   archiveEmail,
   getAwaitingReplies,
+  getUnsubscribeCandidates,
 }

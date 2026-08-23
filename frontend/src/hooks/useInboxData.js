@@ -7,6 +7,7 @@ export function useInboxData() {
   const [categorized, setCategorized] = useState([])
   const [pendingActions, setPendingActions] = useState([])
   const [awaitingReplies, setAwaitingReplies] = useState([])
+  const [unsubCandidates, setUnsubCandidates] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -51,6 +52,18 @@ export function useInboxData() {
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
       setAwaitingReplies(result.awaitingReplies)
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [])
+
+  const fetchUnsubscribeCandidates = useCallback(async () => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/mail/unsubscribe-candidates`, { headers })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      setUnsubCandidates(result.candidates)
     } catch (err) {
       setError(err.message)
     }
@@ -115,11 +128,13 @@ export function useInboxData() {
     grouped,
     pendingActions,
     awaitingReplies,
+    unsubCandidates,
     loading,
     error,
     fetchDigest,
     fetchPendingActions,
     fetchAwaitingReplies,
+    fetchUnsubscribeCandidates,
     proposeAction,
     approveAction,
     rejectAction,

@@ -21,11 +21,13 @@ function Dashboard() {
     grouped,
     pendingActions,
     awaitingReplies,
+    unsubCandidates,
     loading,
     error,
     fetchDigest,
     fetchPendingActions,
     fetchAwaitingReplies,
+    fetchUnsubscribeCandidates,
     proposeAction,
     approveAction,
     rejectAction,
@@ -38,7 +40,8 @@ function Dashboard() {
     fetchDigest()
     fetchPendingActions()
     fetchAwaitingReplies()
-  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies])
+    fetchUnsubscribeCandidates()
+  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates])
 
   async function handleBulkAction(mails, actionType) {
     for (const mail of mails) {
@@ -72,6 +75,14 @@ function Dashboard() {
       setToastMessage('Event added to your calendar!')
     } catch (err) {
       setToastMessage(`Failed to add event: ${err.message}`)
+    }
+  }
+
+  function handleUnsubscribe(candidate) {
+    if (candidate.unsubscribeUrl) {
+      window.open(candidate.unsubscribeUrl, '_blank')
+    } else if (candidate.unsubscribeMailto) {
+      window.location.href = `mailto:${candidate.unsubscribeMailto}`
     }
   }
 
@@ -124,6 +135,17 @@ function Dashboard() {
         >
           Awaiting Reply <span className="opacity-60 ml-1">{awaitingReplies.length}</span>
         </button>
+        <button
+          onClick={() => setActiveTab('Unsubscribe')}
+          className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+          style={
+            activeTab === 'Unsubscribe'
+              ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+              : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
+          }
+        >
+          Unsubscribe <span className="opacity-60 ml-1">{unsubCandidates.length}</span>
+        </button>
       </div>
 
       {/* Bulk action for current tab, if Newsletter/Promotional */}
@@ -159,6 +181,30 @@ function Dashboard() {
                 </span>
                 <p className="text-sm font-medium">{mail.subject || '(no subject)'}</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>To: {mail.to}</p>
+              </div>
+            ))
+          )
+        ) : activeTab === 'Unsubscribe' ? (
+          unsubCandidates.length === 0 ? (
+            <p className="text-sm col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
+              No unsubscribe-able emails detected
+            </p>
+          ) : (
+            unsubCandidates.map((c) => (
+              <div
+                key={c.id}
+                className="glass-panel rounded-2xl p-4 space-y-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <p className="text-sm font-medium">{c.subject || '(no subject)'}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{c.from}</p>
+                <button
+                  onClick={() => handleUnsubscribe(c)}
+                  className="text-xs px-3 py-1.5 rounded-lg transition glass-btn"
+                  style={{ background: 'rgba(224, 113, 110, 0.12)', color: 'var(--accent-danger)', border: '1px solid rgba(224, 113, 110, 0.25)' }}
+                >
+                  Unsubscribe
+                </button>
               </div>
             ))
           )

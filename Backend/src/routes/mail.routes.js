@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const verifyAuth = require('../middleware/auth')
-const { getInboxDigest, getAwaitingReplies } = require('../services/gmailService')
+const { getInboxDigest, getAwaitingReplies, getUnsubscribeCandidates } = require('../services/gmailService')
 const { categorizeInbox } = require('../services/agentService')
 
 router.get('/digest', verifyAuth, async (req, res) => {
@@ -33,6 +33,15 @@ router.get('/awaiting-replies', verifyAuth, async (req, res) => {
   try {
     const replies = await getAwaitingReplies(req.user.id)
     res.json({ awaitingReplies: replies })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.get('/unsubscribe-candidates', verifyAuth, async (req, res) => {
+  try {
+    const candidates = await getUnsubscribeCandidates(req.user.id)
+    res.json({ candidates })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
