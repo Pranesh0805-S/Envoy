@@ -6,6 +6,7 @@ const API_BASE = 'http://localhost:5000/api'
 export function useInboxData() {
   const [categorized, setCategorized] = useState([])
   const [pendingActions, setPendingActions] = useState([])
+  const [awaitingReplies, setAwaitingReplies] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -38,6 +39,18 @@ export function useInboxData() {
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
       setPendingActions(result.actions)
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [])
+
+  const fetchAwaitingReplies = useCallback(async () => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/mail/awaiting-replies`, { headers })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      setAwaitingReplies(result.awaitingReplies)
     } catch (err) {
       setError(err.message)
     }
@@ -90,7 +103,6 @@ export function useInboxData() {
     }
   }, [fetchPendingActions])
 
-  // Group categorized emails by category
   const grouped = categorized.reduce((acc, mail) => {
     const key = mail.category || 'Other'
     if (!acc[key]) acc[key] = []
@@ -102,10 +114,12 @@ export function useInboxData() {
     categorized,
     grouped,
     pendingActions,
+    awaitingReplies,
     loading,
     error,
     fetchDigest,
     fetchPendingActions,
+    fetchAwaitingReplies,
     proposeAction,
     approveAction,
     rejectAction,

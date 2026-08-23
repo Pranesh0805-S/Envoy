@@ -20,10 +20,12 @@ function Dashboard() {
   const {
     grouped,
     pendingActions,
+    awaitingReplies,
     loading,
     error,
     fetchDigest,
     fetchPendingActions,
+    fetchAwaitingReplies,
     proposeAction,
     approveAction,
     rejectAction,
@@ -35,7 +37,8 @@ function Dashboard() {
   useEffect(() => {
     fetchDigest()
     fetchPendingActions()
-  }, [fetchDigest, fetchPendingActions])
+    fetchAwaitingReplies()
+  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies])
 
   async function handleBulkAction(mails, actionType) {
     for (const mail of mails) {
@@ -110,6 +113,17 @@ function Dashboard() {
             </button>
           )
         })}
+        <button
+          onClick={() => setActiveTab('Awaiting Reply')}
+          className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+          style={
+            activeTab === 'Awaiting Reply'
+              ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+              : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
+          }
+        >
+          Awaiting Reply <span className="opacity-60 ml-1">{awaitingReplies.length}</span>
+        </button>
       </div>
 
       {/* Bulk action for current tab, if Newsletter/Promotional */}
@@ -125,18 +139,45 @@ function Dashboard() {
 
       {/* Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {activeMails.map((mail, i) => (
-          <MailCard
-            key={mail.gmailId || i}
-            mail={mail}
-            onPropose={proposeAction}
-            onAddToCalendar={handleAddToCalendar}
-          />
-        ))}
-        {activeMails.length === 0 && (
-          <p className="text-sm col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
-            Nothing here
-          </p>
+        {activeTab === 'Awaiting Reply' ? (
+          awaitingReplies.length === 0 ? (
+            <p className="text-sm col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
+              Nothing here
+            </p>
+          ) : (
+            awaitingReplies.map((mail) => (
+              <div
+                key={mail.id}
+                className="glass-panel rounded-2xl p-4 space-y-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <span
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-full inline-block"
+                  style={{ background: 'rgba(240, 163, 94, 0.15)', color: 'var(--accent-warm)' }}
+                >
+                  {mail.daysSince} day{mail.daysSince !== 1 ? 's' : ''} no reply
+                </span>
+                <p className="text-sm font-medium">{mail.subject || '(no subject)'}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>To: {mail.to}</p>
+              </div>
+            ))
+          )
+        ) : (
+          <>
+            {activeMails.map((mail, i) => (
+              <MailCard
+                key={mail.gmailId || i}
+                mail={mail}
+                onPropose={proposeAction}
+                onAddToCalendar={handleAddToCalendar}
+              />
+            ))}
+            {activeMails.length === 0 && (
+              <p className="text-sm col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
+                Nothing here
+              </p>
+            )}
+          </>
         )}
       </div>
 
