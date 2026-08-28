@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 import FloatingAvatar from '../components/avatar/FloatingAvatar'
 import Sidebar from '../components/ui/Sidebar'
 import Toast from '../components/ui/Toast'
+import ApprovalCard from '../components/mail/ApprovalCard'
 
 const CATEGORY_ORDER = [
   'Urgent',
@@ -75,7 +76,7 @@ function Dashboard() {
 
   async function handleBulkAction(mails, actionType) {
     for (const mail of mails) {
-      await proposeAction(mail.gmailId, actionType)
+      await proposeAction(mail.gmailId, actionType, mail.summary)
     }
   }
 
@@ -265,35 +266,12 @@ function Dashboard() {
           {pendingActions.map((action) => {
             if (!action?.id) return null
             return (
-              <div
+              <ApprovalCard
                 key={action.id}
-                className="flex justify-between items-center text-sm rounded-lg p-2"
-                style={{ background: 'var(--glass-fill)', color: 'var(--text-primary)' }}
-              >
-                <span className="capitalize">{action.action_type}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.currentTarget.disabled = true
-                      approveAction(action.id)
-                    }}
-                    className="text-xs px-2 py-1 rounded glass-btn"
-                    style={{ background: 'rgba(126, 201, 143, 0.15)', color: 'var(--accent-success)' }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.currentTarget.disabled = true
-                      rejectAction(action.id)
-                    }}
-                    className="text-xs px-2 py-1 rounded glass-btn"
-                    style={{ background: 'var(--glass-fill-strong)', color: 'var(--text-secondary)' }}
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
+                action={action}
+                onApprove={(id) => approveAction(id)}
+                onReject={(id) => rejectAction(id)}
+              />
             )
           })}
         </div>

@@ -69,18 +69,18 @@ export function useInboxData() {
     }
   }, [])
 
-  const proposeAction = useCallback(async (gmailId, actionType) => {
-    try {
-      const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/actions/propose`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actionType, emailId: gmailId }),
-      })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error)
-      await fetchPendingActions()
-      return result.action
+  const proposeAction = useCallback(async (gmailId, actionType, subject = '') => {
+  try {
+    const headers = await getAuthHeader()
+    const res = await fetch(`${API_BASE}/actions/propose`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actionType, emailId: gmailId, payload: { subject } }),
+    })
+    const result = await res.json()
+    if (!res.ok) throw new Error(result.error)
+    await fetchPendingActions()
+    return result.action
     } catch (err) {
       setError(err.message)
     }

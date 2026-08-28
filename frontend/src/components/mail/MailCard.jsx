@@ -110,14 +110,14 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
 
       <div className="flex gap-2 pt-1 flex-wrap">
         <button
-          onClick={() => onPropose(mail.gmailId, 'archive')}
+          onClick={() => onPropose(mail.gmailId, 'archive', mail.summary)}
           className="text-xs px-3 py-1.5 rounded-lg transition glass-btn glass-panel"
           style={{ color: 'var(--text-secondary)' }}
         >
           Archive
         </button>
         <button
-          onClick={() => onPropose(mail.gmailId, 'delete')}
+          onClick={() => onPropose(mail.gmailId, 'delete', mail.summary)}
           className="text-xs px-3 py-1.5 rounded-lg transition glass-btn"
           style={{ background: 'rgba(224, 113, 110, 0.12)', color: 'var(--accent-danger)', border: '1px solid rgba(224, 113, 110, 0.25)' }}
         >
