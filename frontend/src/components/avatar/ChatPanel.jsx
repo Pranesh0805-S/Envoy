@@ -51,6 +51,24 @@ function ChatPanel({ messages, onSend, onClose, loading }) {
             }
           >
             {m.content}
+
+            {m.draft && (
+              <div
+                className="mt-2 p-3 rounded-lg text-xs space-y-1"
+                style={{ background: 'var(--glass-fill)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+              >
+                <p><strong>To:</strong> {m.draft.to}</p>
+                <p><strong>Subject:</strong> {m.draft.subject}</p>
+                <p className="whitespace-pre-wrap mt-1">{m.draft.body}</p>
+                <button
+                  onClick={() => navigator.clipboard.writeText(m.draft.body)}
+                  className="mt-2 text-xs px-2 py-1 rounded glass-btn"
+                  style={{ background: 'var(--accent-primary)', color: 'white' }}
+                >
+                  Copy Draft
+                </button>
+              </div>
+            )}
           </motion.div>
         ))}
         {loading && (

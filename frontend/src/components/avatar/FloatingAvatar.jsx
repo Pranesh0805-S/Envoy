@@ -122,7 +122,10 @@ function FloatingAvatar() {
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
 
-      setMessages((prev) => [...prev, { role: 'assistant', content: result.reply }])
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: result.reply, draft: result.draft || null },
+      ])
       setAvatarState(wasClosedDuringReply.current ? 'alert' : 'idle')
     } catch (err) {
       setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
@@ -132,7 +135,6 @@ function FloatingAvatar() {
 
   function handleToggle() {
     if (!open && avatarState === 'alert') {
-      // Reopening after a notification — greet with a wink, then settle to idle
       setAvatarState('greet')
       setTimeout(() => setAvatarState('idle'), 600)
     }
