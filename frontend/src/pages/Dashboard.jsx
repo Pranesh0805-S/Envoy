@@ -36,6 +36,36 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('Newsletter/Promotional')
   const [toastMessage, setToastMessage] = useState(null)
 
+  // Capture Google provider tokens right after OAuth redirect and save them to backend
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!session?.provider_token) return
+
+        try {
+          await fetch('http://localhost:5000/api/auth/save-google-tokens', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              provider_token: session.provider_token,
+              provider_refresh_token: session.provider_refresh_token,
+              expires_at: session.expires_at,
+            }),
+          })
+        } catch (err) {
+          console.error('Failed to save Google tokens:', err.message)
+        }
+      }
+    )
+
+    return () => {
+      authListener?.subscription?.unsubscribe()
+    }
+  }, [])
+
   useEffect(() => {
     fetchDigest()
     fetchPendingActions()
