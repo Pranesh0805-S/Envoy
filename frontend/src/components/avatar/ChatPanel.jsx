@@ -46,7 +46,7 @@ function ChatPanel({ messages, onSend, onClose, loading }) {
             className="max-w-[85%] px-3 py-2 rounded-xl text-sm"
             style={
               m.role === 'user'
-                ? { marginLeft: 'auto', background: 'var(--accent-primary)', color: 'white' }
+                ? { marginLeft: 'auto', background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
                 : { marginRight: 'auto', background: 'var(--glass-fill-strong)', color: 'var(--text-primary)' }
             }
           >
@@ -55,7 +55,7 @@ function ChatPanel({ messages, onSend, onClose, loading }) {
             {m.draft && (
               <div
                 className="mt-2 p-3 rounded-lg text-xs space-y-1"
-                style={{ background: 'var(--glass-fill)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
               >
                 <p><strong>To:</strong> {m.draft.to}</p>
                 <p><strong>Subject:</strong> {m.draft.subject}</p>
@@ -63,7 +63,7 @@ function ChatPanel({ messages, onSend, onClose, loading }) {
                 <button
                   onClick={() => navigator.clipboard.writeText(m.draft.body)}
                   className="mt-2 text-xs px-2 py-1 rounded glass-btn"
-                  style={{ background: 'var(--accent-primary)', color: 'white' }}
+                  style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
                 >
                   Copy Draft
                 </button>
@@ -91,7 +91,7 @@ function ChatPanel({ messages, onSend, onClose, loading }) {
           onClick={handleSend}
           disabled={loading}
           className="px-4 py-2 rounded-lg text-sm transition disabled:opacity-40 glass-btn"
-          style={{ background: 'var(--accent-primary)', color: 'white' }}
+          style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
         >
           Send
         </button>

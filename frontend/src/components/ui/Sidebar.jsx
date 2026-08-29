@@ -24,7 +24,8 @@ function Sidebar() {
 
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-40"
+          className="fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.35)' }}
           onClick={() => setOpen(false)}
         />
       )}
@@ -50,11 +51,12 @@ function Sidebar() {
             <a
               key={item.href}
               href={item.href}
-              className="px-3 py-2.5 rounded-lg text-sm glass-btn"
-              style={{
-                color: item.active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: item.active ? 'var(--glass-fill-strong)' : 'transparent',
-              }}
+              className="px-3 py-2.5 rounded-lg text-sm glass-btn font-medium"
+              style={
+                item.active
+                  ? { color: 'var(--accent-primary-text)', background: 'var(--accent-primary)' }
+                  : { color: 'var(--text-secondary)', background: 'transparent' }
+              }
             >
               {item.label}
             </a>
@@ -69,11 +71,11 @@ function Sidebar() {
                 key={mode}
                 onClick={() => setTheme(mode)}
                 className="flex-1 px-2 py-1.5 rounded-lg text-xs capitalize glass-btn"
-                style={{
-                  background: theme === mode ? 'var(--glass-fill-strong)' : 'transparent',
-                  color: theme === mode ? 'var(--text-primary)' : 'var(--text-muted)',
-                  border: '1px solid var(--glass-border)',
-                }}
+                style={
+                  theme === mode
+                    ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)', border: '1px solid var(--accent-primary)' }
+                    : { background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--glass-border)' }
+                }
               >
                 {mode}
               </button>
