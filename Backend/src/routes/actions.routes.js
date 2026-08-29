@@ -4,7 +4,7 @@ const verifyAuth = require('../middleware/auth')
 const { createPendingAction, getPendingActions, updateActionStatus } = require('../services/approvalQueue')
 const { deleteEmail, archiveEmail } = require('../services/gmailService')
 
-// Propose an action (goes into pending queue, nothing executes yet)
+// Propose an action (goes into pending queue, nothing executes yet) — used for bulk actions
 router.post('/propose', verifyAuth, async (req, res) => {
   try {
     const { actionType, emailId, payload } = req.body
@@ -46,6 +46,25 @@ router.post('/:id/approve', verifyAuth, async (req, res) => {
 router.post('/:id/reject', verifyAuth, async (req, res) => {
   try {
     const action = await updateActionStatus(req.user.id, req.params.id, 'rejected')
+    res.json({ success: true, action })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Execute — propose + approve in one call, used for inline single-card confirmation
+router.post('/execute', verifyAuth, async (req, res) => {
+  try {
+    const { actionType, emailId, payload } = req.body
+    const action = await createPendingAction(req.user.id, actionType, emailId, payload)
+
+    if (actionType === 'delete') {
+      await deleteEmail(req.user.id, emailId)
+    } else if (actionType === 'archive') {
+      await archiveEmail(req.user.id, emailId)
+    }
+
+    await updateActionStatus(req.user.id, action.id, 'approved')
     res.json({ success: true, action })
   } catch (err) {
     res.status(500).json({ error: err.message })

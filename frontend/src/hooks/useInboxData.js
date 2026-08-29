@@ -70,21 +70,37 @@ export function useInboxData() {
   }, [])
 
   const proposeAction = useCallback(async (gmailId, actionType, subject = '') => {
-  try {
-    const headers = await getAuthHeader()
-    const res = await fetch(`${API_BASE}/actions/propose`, {
-      method: 'POST',
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actionType, emailId: gmailId, payload: { subject } }),
-    })
-    const result = await res.json()
-    if (!res.ok) throw new Error(result.error)
-    await fetchPendingActions()
-    return result.action
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/actions/propose`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType, emailId: gmailId, payload: { subject } }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      await fetchPendingActions()
+      return result.action
     } catch (err) {
       setError(err.message)
     }
   }, [fetchPendingActions])
+
+  const executeAction = useCallback(async (gmailId, actionType, subject = '') => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/actions/execute`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType, emailId: gmailId, payload: { subject } }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      return result
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [])
 
   const approveAction = useCallback(async (actionId) => {
     try {
@@ -136,6 +152,7 @@ export function useInboxData() {
     fetchAwaitingReplies,
     fetchUnsubscribeCandidates,
     proposeAction,
+    executeAction,
     approveAction,
     rejectAction,
   }

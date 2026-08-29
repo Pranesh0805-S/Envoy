@@ -1,43 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-display: 'Inter', system-ui, sans-serif;
+  --font-display: 'Manrope', system-ui, sans-serif;
 }
 
 :root {
   color-scheme: light dark;
 
-  /* Warm neutral — dark mode (default) */
-  --bg-base: #1a1816;
-  --bg-elevated: #211f1c;
-  --text-primary: #f5f0ea;
-  --text-secondary: rgba(245, 240, 234, 0.6);
-  --text-muted: rgba(245, 240, 234, 0.35);
+  /* Warm near-black — dark mode (default) */
+  --bg-base: #101715;
+  --bg-elevated: #17211e;
+  --text-primary: #f1f4ef;
+  --text-secondary: rgba(241, 244, 239, 0.65);
+  --text-muted: rgba(241, 244, 239, 0.4);
 
-  --glass-fill: rgba(255, 250, 245, 0.05);
-  --glass-fill-strong: rgba(255, 250, 245, 0.09);
-  --glass-border: rgba(255, 250, 245, 0.1);
+  --glass-fill: rgba(241, 244, 239, 0.04);
+  --glass-fill-strong: rgba(241, 244, 239, 0.07);
+  --glass-border: #2b3833;
 
-  --accent-primary: #c8a876;
-  --accent-warm: #e0a05e;
-  --accent-danger: #e0716e;
+  /* Single muted accent — sage/mint, used sparingly for primary actions */
+  --accent-primary: #9cf0c3;
+  --accent-primary-text: #142017;
+
+  /* Semantic colors — muted, not neon */
+  --accent-warm: #d4a76a;
+  --accent-danger: #d98b86;
   --accent-success: #7ec98f;
 }
 
 [data-theme="light"] {
-  --bg-base: #f7f3ee;
+  --bg-base: #f6f6f2;
   --bg-elevated: #ffffff;
-  --text-primary: #2a2622;
-  --text-secondary: rgba(42, 38, 34, 0.65);
-  --text-muted: rgba(42, 38, 34, 0.4);
+  --text-primary: #17201d;
+  --text-secondary: rgba(23, 32, 29, 0.65);
+  --text-muted: rgba(23, 32, 29, 0.4);
 
-  --glass-fill: rgba(30, 25, 20, 0.04);
-  --glass-fill-strong: rgba(30, 25, 20, 0.07);
-  --glass-border: rgba(30, 25, 20, 0.08);
+  --glass-fill: rgba(23, 32, 29, 0.03);
+  --glass-fill-strong: rgba(23, 32, 29, 0.05);
+  --glass-border: #d9dfda;
 
-  --accent-primary: #a8824f;
-  --accent-warm: #c9843f;
-  --accent-danger: #c9564f;
+  --accent-primary: #6bc99a;
+  --accent-primary-text: #ffffff;
+
+  --accent-warm: #b8863f;
+  --accent-danger: #c15f58;
   --accent-success: #4f9e63;
 }
 
@@ -49,33 +56,27 @@ body {
   transition: background 0.4s ease, color 0.4s ease;
 }
 
+/* Solid bordered panels instead of heavy glass blur — calmer, more "professional SaaS" */
 .glass-panel {
-  background: var(--glass-fill);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
 }
 
 .glass-panel-strong {
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(32px) saturate(1.4);
-  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
-/* Apple-style press/hover feel */
 .glass-btn {
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
               background 0.2s ease,
-              box-shadow 0.2s ease;
+              border-color 0.2s ease;
 }
 .glass-btn:hover {
   transform: translateY(-1px);
+  border-color: var(--accent-primary);
 }
 .glass-btn:active {
   transform: scale(0.97) translateY(0px);
@@ -86,18 +87,17 @@ body {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(24px);
+  background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
   padding: 12px 20px;
   border-radius: 12px;
   font-size: 14px;
   z-index: 100;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Style native date/time inputs to fit the glass theme better */
+/* Native date/time inputs match theme */
 input[type="date"], input[type="time"] {
   color-scheme: dark;
 }

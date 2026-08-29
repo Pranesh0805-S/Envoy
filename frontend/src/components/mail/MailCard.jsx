@@ -1,10 +1,12 @@
 import { useState } from 'react'
 
-function MailCard({ mail, onPropose, onAddToCalendar }) {
+function MailCard({ mail, onExecute, onAddToCalendar }) {
   const [showWhy, setShowWhy] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [manualDate, setManualDate] = useState('')
   const [manualTime, setManualTime] = useState('')
+  const [pendingAction, setPendingAction] = useState(null) // 'archive' | 'delete' | null
+  const [executing, setExecuting] = useState(false)
 
   function handleCalendarClick() {
     if (mail.meetingTime) {
@@ -21,25 +23,70 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
     setShowDatePicker(false)
   }
 
+  async function handleConfirm() {
+    setExecuting(true)
+    await onExecute(mail.gmailId, pendingAction, mail.summary)
+    setExecuting(false)
+    setPendingAction(null)
+  }
+
+  if (pendingAction) {
+    return (
+      <div
+        className="glass-panel rounded-xl p-4 space-y-3"
+        style={{ color: 'var(--text-primary)', borderColor: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
+      >
+        <p className="text-sm font-medium">
+          {pendingAction === 'delete' ? 'Delete this email?' : 'Archive this email?'}
+        </p>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          {mail.summary}
+        </p>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleConfirm}
+            disabled={executing}
+            className="flex-1 text-xs px-3 py-2 rounded-lg glass-btn disabled:opacity-50"
+            style={
+              pendingAction === 'delete'
+                ? { background: 'var(--accent-danger)', color: 'white' }
+                : { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
+            }
+          >
+            {executing ? 'Working...' : `Yes, ${pendingAction}`}
+          </button>
+          <button
+            onClick={() => setPendingAction(null)}
+            disabled={executing}
+            className="flex-1 text-xs px-3 py-2 rounded-lg glass-btn"
+            style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
-      className="glass-panel rounded-2xl p-4 space-y-3 transition-all duration-200 hover:-translate-y-0.5"
+      className="glass-panel rounded-xl p-4 space-y-3 transition-all duration-200 hover:-translate-y-0.5"
       style={{ color: 'var(--text-primary)' }}
     >
       <div className="flex justify-between items-start gap-2">
         <div className="flex gap-1.5 flex-wrap">
           {mail.needsAction && (
             <span
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(240, 163, 94, 0.15)', color: 'var(--accent-warm)' }}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-md"
+              style={{ background: 'var(--glass-fill-strong)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }}
             >
               Needs Action
             </span>
           )}
           {mail.isMeeting && (
             <span
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(200, 168, 118, 0.15)', color: 'var(--accent-primary)' }}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-md"
+              style={{ background: 'var(--glass-fill-strong)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }}
             >
               Meeting
             </span>
@@ -48,12 +95,8 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
         {typeof mail.confidence === 'number' && (
           <button
             onClick={() => setShowWhy((v) => !v)}
-            className="text-[11px] px-2 py-0.5 rounded-full glass-btn shrink-0"
-            style={{
-              background: 'var(--glass-fill)',
-              color: mail.confidence >= 80 ? 'var(--accent-success)' : 'var(--accent-warm)',
-              border: '1px solid var(--glass-border)',
-            }}
+            className="text-[11px] px-2 py-0.5 rounded-md glass-btn shrink-0"
+            style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--glass-border)' }}
           >
             {mail.confidence}% · Why?
           </button>
@@ -101,7 +144,7 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
             onClick={handleManualConfirm}
             disabled={!manualDate || !manualTime}
             className="text-xs px-3 py-1.5 rounded-lg transition glass-btn disabled:opacity-40"
-            style={{ background: 'var(--accent-primary)', color: 'white' }}
+            style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
           >
             Confirm & Add
           </button>
@@ -110,16 +153,16 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
 
       <div className="flex gap-2 pt-1 flex-wrap">
         <button
-          onClick={() => onPropose(mail.gmailId, 'archive', mail.summary)}
+          onClick={() => setPendingAction('archive')}
           className="text-xs px-3 py-1.5 rounded-lg transition glass-btn glass-panel"
           style={{ color: 'var(--text-secondary)' }}
         >
           Archive
         </button>
         <button
-          onClick={() => onPropose(mail.gmailId, 'delete', mail.summary)}
+          onClick={() => setPendingAction('delete')}
           className="text-xs px-3 py-1.5 rounded-lg transition glass-btn"
-          style={{ background: 'rgba(224, 113, 110, 0.12)', color: 'var(--accent-danger)', border: '1px solid rgba(224, 113, 110, 0.25)' }}
+          style={{ background: 'transparent', color: 'var(--accent-danger)', border: '1px solid var(--glass-border)' }}
         >
           Delete
         </button>
@@ -127,7 +170,7 @@ function MailCard({ mail, onPropose, onAddToCalendar }) {
           <button
             onClick={handleCalendarClick}
             className="text-xs px-3 py-1.5 rounded-lg transition glass-btn"
-            style={{ background: 'rgba(200, 168, 118, 0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(200, 168, 118, 0.3)' }}
+            style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
           >
             {mail.meetingTime ? 'Add to Calendar' : 'Mark Date & Add'}
           </button>

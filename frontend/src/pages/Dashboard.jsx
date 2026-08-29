@@ -30,6 +30,7 @@ function Dashboard() {
     fetchAwaitingReplies,
     fetchUnsubscribeCandidates,
     proposeAction,
+    executeAction,
     approveAction,
     rejectAction,
   } = useInboxData()
@@ -127,7 +128,7 @@ function Dashboard() {
           onClick={fetchDigest}
           disabled={loading}
           className="px-4 py-2 rounded-xl font-semibold transition disabled:opacity-50 glass-btn"
-          style={{ background: 'var(--accent-primary)', color: 'white' }}
+          style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
         >
           {loading ? 'Refreshing...' : 'Refresh Inbox'}
         </button>
@@ -147,7 +148,7 @@ function Dashboard() {
               className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
               style={
                 isActive
-                  ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+                  ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
                   : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
               }
             >
@@ -160,7 +161,7 @@ function Dashboard() {
           className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
           style={
             activeTab === 'Awaiting Reply'
-              ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+              ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
               : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
           }
         >
@@ -171,7 +172,7 @@ function Dashboard() {
           className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
           style={
             activeTab === 'Unsubscribe'
-              ? { background: 'var(--text-primary)', color: 'var(--bg-base)' }
+              ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
               : { background: 'var(--glass-fill)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }
           }
         >
@@ -201,12 +202,12 @@ function Dashboard() {
             awaitingReplies.map((mail) => (
               <div
                 key={mail.id}
-                className="glass-panel rounded-2xl p-4 space-y-2"
+                className="glass-panel rounded-xl p-4 space-y-2"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <span
-                  className="text-[11px] font-medium px-2 py-0.5 rounded-full inline-block"
-                  style={{ background: 'rgba(240, 163, 94, 0.15)', color: 'var(--accent-warm)' }}
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
+                  style={{ background: 'var(--glass-fill-strong)', color: 'var(--text-secondary)', border: '1px solid var(--glass-border)' }}
                 >
                   {mail.daysSince} day{mail.daysSince !== 1 ? 's' : ''} no reply
                 </span>
@@ -224,7 +225,7 @@ function Dashboard() {
             unsubCandidates.map((c) => (
               <div
                 key={c.id}
-                className="glass-panel rounded-2xl p-4 space-y-2"
+                className="glass-panel rounded-xl p-4 space-y-2"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <p className="text-sm font-medium">{c.subject || '(no subject)'}</p>
@@ -232,7 +233,7 @@ function Dashboard() {
                 <button
                   onClick={() => handleUnsubscribe(c)}
                   className="text-xs px-3 py-1.5 rounded-lg transition glass-btn"
-                  style={{ background: 'rgba(224, 113, 110, 0.12)', color: 'var(--accent-danger)', border: '1px solid rgba(224, 113, 110, 0.25)' }}
+                  style={{ background: 'transparent', color: 'var(--accent-danger)', border: '1px solid var(--glass-border)' }}
                 >
                   Unsubscribe
                 </button>
@@ -245,7 +246,7 @@ function Dashboard() {
               <MailCard
                 key={mail.gmailId || i}
                 mail={mail}
-                onPropose={proposeAction}
+                onExecute={executeAction}
                 onAddToCalendar={handleAddToCalendar}
               />
             ))}
