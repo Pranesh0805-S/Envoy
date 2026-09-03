@@ -33,35 +33,26 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   if (pendingAction) {
     return (
       <div
-        className="glass-panel rounded-lg p-4 flex flex-col justify-between"
+        className="glass-panel rounded-lg p-4 flex items-center justify-between border"
         style={{ borderColor: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
       >
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}>
+        <div className="space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-danger)]">
             Confirm {pendingAction}
-          </p>
-          <p className="text-sm font-medium line-clamp-2" style={{ color: 'var(--text-primary)' }}>
-            {mail.summary}
-          </p>
+          </span>
+          <p className="text-sm font-medium text-[var(--text-primary)]">{mail.summary}</p>
         </div>
-        <div className="flex gap-2 pt-3">
+        <div className="flex gap-2 shrink-0">
           <button
             onClick={handleConfirm}
             disabled={executing}
-            className="flex-1 text-xs py-1.5 px-3 rounded-md font-medium transition disabled:opacity-50"
-            style={
-              pendingAction === 'delete'
-                ? { background: 'var(--accent-danger)', color: 'white' }
-                : { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
-            }
+            className="text-xs px-3 py-1.5 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600 transition"
           >
             {executing ? 'Processing...' : `Yes, ${pendingAction}`}
           </button>
           <button
             onClick={() => setPendingAction(null)}
-            disabled={executing}
-            className="flex-1 text-xs py-1.5 px-3 rounded-md font-medium border"
-            style={{ borderColor: 'var(--glass-border)', color: 'var(--text-secondary)' }}
+            className="text-xs px-3 py-1.5 rounded-md font-medium border border-[var(--glass-border)] text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] transition"
           >
             Cancel
           </button>
@@ -71,113 +62,84 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   }
 
   return (
-    <div className="group glass-panel rounded-lg p-4 flex flex-col justify-between transition-all duration-150 hover:border-slate-400/30">
-      <div className="space-y-2">
-        {/* Card Header: Tags & Confidence */}
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            {mail.needsAction && (
-              <span
-                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
-                style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }}
-              >
-                Action Required
-              </span>
-            )}
-            {mail.isMeeting && (
-              <span
-                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
-                style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)' }}
-              >
-                Calendar
-              </span>
-            )}
-          </div>
-
+    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Left Content: Tags & Summary */}
+      <div className="space-y-1.5 flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          {mail.needsAction && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500">
+              Needs Action
+            </span>
+          )}
+          {mail.isMeeting && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500">
+              Meeting
+            </span>
+          )}
           {typeof mail.confidence === 'number' && (
             <button
               onClick={() => setShowWhy((v) => !v)}
-              className="text-[11px] font-medium opacity-60 hover:opacity-100 transition"
-              style={{ color: 'var(--text-secondary)' }}
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
             >
-              {mail.confidence}% match
+              {mail.confidence}% match · Why?
             </button>
           )}
         </div>
 
-        {/* Email Content */}
-        <div>
-          <p className="text-sm font-medium leading-snug line-clamp-3" style={{ color: 'var(--text-primary)' }}>
-            {mail.summary}
-          </p>
-        </div>
+        <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)]">
+          {mail.summary}
+        </p>
 
         {showWhy && mail.reasoning && (
-          <div
-            className="text-xs p-2.5 rounded-md leading-relaxed"
-            style={{ background: 'var(--bg-subtle)', color: 'var(--text-secondary)' }}
-          >
+          <p className="text-xs p-2 rounded bg-[var(--bg-subtle)] text-[var(--text-secondary)] mt-2">
             {mail.reasoning}
-          </div>
+          </p>
         )}
 
         {showDatePicker && (
-          <div className="p-2.5 rounded-md space-y-2" style={{ background: 'var(--bg-subtle)' }}>
-            <p className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>Select Meeting Schedule:</p>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={manualDate}
-                onChange={(e) => setManualDate(e.target.value)}
-                className="flex-1 text-xs px-2 py-1.5 rounded border bg-transparent"
-                style={{ borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }}
-              />
-              <input
-                type="time"
-                value={manualTime}
-                onChange={(e) => setManualTime(e.target.value)}
-                className="flex-1 text-xs px-2 py-1.5 rounded border bg-transparent"
-                style={{ borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }}
-              />
-            </div>
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="date"
+              value={manualDate}
+              onChange={(e) => setManualDate(e.target.value)}
+              className="text-xs px-2 py-1 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+            />
+            <input
+              type="time"
+              value={manualTime}
+              onChange={(e) => setManualTime(e.target.value)}
+              className="text-xs px-2 py-1 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+            />
             <button
               onClick={handleManualConfirm}
-              disabled={!manualDate || !manualTime}
-              className="w-full text-xs py-1 rounded font-medium disabled:opacity-40"
-              style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
+              className="text-xs px-2.5 py-1 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-500"
             >
-              Confirm
+              Add
             </button>
           </div>
         )}
       </div>
 
-      {/* Action Footer: Revealed on Card Hover */}
-      <div className="flex justify-between items-center pt-3 mt-2 border-t" style={{ borderColor: 'var(--glass-border)' }}>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setPendingAction('archive')}
-            className="text-xs font-medium px-2.5 py-1 rounded hover:bg-slate-500/10 transition"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Archive
-          </button>
-          <button
-            onClick={() => setPendingAction('delete')}
-            className="text-xs font-medium px-2.5 py-1 rounded hover:bg-red-500/10 transition"
-            style={{ color: 'var(--accent-danger)' }}
-          >
-            Delete
-          </button>
-        </div>
-
+      {/* Right Controls: Actions */}
+      <div className="flex items-center gap-1 shrink-0 self-end md:self-center opacity-80 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={() => setPendingAction('archive')}
+          className="text-xs font-medium px-2.5 py-1.5 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
+        >
+          Archive
+        </button>
+        <button
+          onClick={() => setPendingAction('delete')}
+          className="text-xs font-medium px-2.5 py-1.5 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
+        >
+          Delete
+        </button>
         {mail.isMeeting && (
           <button
             onClick={handleCalendarClick}
-            className="text-xs font-medium px-2.5 py-1 rounded ml-auto transition"
-            style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
+            className="text-xs font-medium px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-500 transition"
           >
-            {mail.meetingTime ? 'Add to Calendar' : 'Schedule'}
+            {mail.meetingTime ? 'Add to Cal' : 'Schedule'}
           </button>
         )}
       </div>
