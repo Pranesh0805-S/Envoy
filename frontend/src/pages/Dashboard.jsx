@@ -127,7 +127,7 @@ function Dashboard() {
         <button
           onClick={fetchDigest}
           disabled={loading}
-          className="px-4 py-2 rounded-xl font-semibold transition disabled:opacity-50 glass-btn"
+          className="px-4 py-2 rounded-md font-semibold transition disabled:opacity-50 glass-btn"
           style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
         >
           {loading ? 'Refreshing...' : 'Refresh Inbox'}
@@ -145,7 +145,7 @@ function Dashboard() {
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+              className="shrink-0 px-3.5 py-1.5 rounded-md text-sm font-medium transition glass-btn"
               style={
                 isActive
                   ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
@@ -158,7 +158,7 @@ function Dashboard() {
         })}
         <button
           onClick={() => setActiveTab('Awaiting Reply')}
-          className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+          className="shrink-0 px-3.5 py-1.5 rounded-md text-sm font-medium transition glass-btn"
           style={
             activeTab === 'Awaiting Reply'
               ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
@@ -169,7 +169,7 @@ function Dashboard() {
         </button>
         <button
           onClick={() => setActiveTab('Unsubscribe')}
-          className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition glass-btn"
+          className="shrink-0 px-3.5 py-1.5 rounded-md text-sm font-medium transition glass-btn"
           style={
             activeTab === 'Unsubscribe'
               ? { background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }
@@ -184,7 +184,7 @@ function Dashboard() {
       {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
         <button
           onClick={() => handleBulkAction(activeMails, 'archive')}
-          className="mb-4 text-xs px-4 py-2.5 rounded-xl transition glass-panel glass-btn"
+          className="mb-4 text-xs px-3.5 py-2 rounded-md transition glass-panel glass-btn"
           style={{ color: 'var(--text-secondary)' }}
         >
           Archive all {activeMails.length}
@@ -202,7 +202,7 @@ function Dashboard() {
             awaitingReplies.map((mail) => (
               <div
                 key={mail.id}
-                className="glass-panel rounded-xl p-4 space-y-2"
+                className="glass-panel rounded-lg p-4 space-y-2"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <span
@@ -225,7 +225,7 @@ function Dashboard() {
             unsubCandidates.map((c) => (
               <div
                 key={c.id}
-                className="glass-panel rounded-xl p-4 space-y-2"
+                className="glass-panel rounded-lg p-4 space-y-2"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <p className="text-sm font-medium">{c.subject || '(no subject)'}</p>
@@ -260,7 +260,7 @@ function Dashboard() {
       </div>
 
       {pendingActions.length > 0 && (
-        <div className="fixed bottom-24 right-6 w-80 glass-panel-strong rounded-2xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto">
+        <div className="fixed bottom-24 right-6 w-80 glass-panel-strong rounded-xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto">
           <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             Pending Approvals ({pendingActions.length})
           </h3>

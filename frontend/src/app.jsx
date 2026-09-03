@@ -8,7 +8,7 @@ function Home() {
     <div className="min-h-screen flex items-center justify-center">
       <button
         onClick={signInWithGoogle}
-        className="glass-panel glass-btn px-6 py-3 rounded-xl font-semibold"
+        className="glass-panel glass-btn px-6 py-3 rounded-lg font-semibold"
         style={{ color: 'var(--text-primary)' }}
       >
         Sign in with Google
