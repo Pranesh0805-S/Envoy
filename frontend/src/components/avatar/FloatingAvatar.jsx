@@ -8,7 +8,7 @@ const hexPaths = {
   b: "M50 7 L87 28 L88 72 L50 93 L13 72 L12 28 Z",
 }
 
-function BlobAvatar({ state, size = 120 }) {
+function BlobAvatar({ state, size = 44 }) {
   const [blink, setBlink] = useState(false)
   const [wink, setWink] = useState(false)
 
@@ -32,7 +32,6 @@ function BlobAvatar({ state, size = 120 }) {
         fill="url(#blobGradient)"
         animate={{ d: [hexPaths.a, hexPaths.b, hexPaths.a] }}
         transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ filter: 'drop-shadow(0 8px 20px rgba(47,95,208,0.35))' }}
       />
       <defs>
         <linearGradient id="blobGradient" x1="0" y1="0" x2="1" y2="1">
@@ -143,14 +142,31 @@ function FloatingAvatar() {
 
   return (
     <>
+      {/* Docked Mascot Pill */}
       <motion.button
         onClick={handleToggle}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.94 }}
-        className="fixed bottom-6 right-6 z-50"
-        style={{ background: 'transparent', border: 'none' }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.96 }}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border shadow-xl transition-colors backdrop-blur-md"
+        style={{
+          background: 'var(--bg-elevated)',
+          borderColor: avatarState === 'alert' ? 'var(--accent-warm)' : 'var(--glass-border)',
+        }}
       >
-        <BlobAvatar state={avatarState} size={110} />
+        <div className="relative flex items-center justify-center">
+          <BlobAvatar state={avatarState} size={40} />
+          {/* Subtle live indicator pulse */}
+          <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${avatarState === 'thinking' ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${avatarState === 'thinking' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+          </span>
+        </div>
+        <div className="flex flex-col text-left">
+          <span className="text-xs font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>Envoy</span>
+          <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>
+            {avatarState === 'thinking' ? 'Thinking...' : avatarState === 'alert' ? 'New Update' : 'AI Copilot'}
+          </span>
+        </div>
       </motion.button>
 
       <AnimatePresence>
