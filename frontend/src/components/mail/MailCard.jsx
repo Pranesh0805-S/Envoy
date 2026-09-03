@@ -2,26 +2,11 @@ import { useState } from 'react'
 
 function MailCard({ mail, onExecute, onAddToCalendar }) {
   const [showWhy, setShowWhy] = useState(false)
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [manualDate, setManualDate] = useState('')
-  const [manualTime, setManualTime] = useState('')
   const [pendingAction, setPendingAction] = useState(null)
   const [executing, setExecuting] = useState(false)
 
-  function handleCalendarClick() {
-    if (mail.meetingTime) {
-      onAddToCalendar(mail)
-    } else {
-      setShowDatePicker((v) => !v)
-    }
-  }
-
-  function handleManualConfirm() {
-    if (!manualDate || !manualTime) return
-    const combined = `${manualDate}T${manualTime}:00`
-    onAddToCalendar({ ...mail, meetingTime: combined })
-    setShowDatePicker(false)
-  }
+  // Extract a fallback 1-letter monogram from the brand name or summary
+  const brandLetter = (mail.from || mail.summary || 'E').trim().charAt(0).toUpperCase()
 
   async function handleConfirm() {
     setExecuting(true)
@@ -33,7 +18,7 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   if (pendingAction) {
     return (
       <div
-        className="glass-panel rounded-lg p-4 flex items-center justify-between border"
+        className="glass-panel rounded-lg p-4 flex items-center justify-between border shadow-sm"
         style={{ borderColor: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
       >
         <div className="space-y-0.5 pr-4">
@@ -62,28 +47,36 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   }
 
   return (
-    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      {/* Left Content Area (Contains all text; protected from overlapping) */}
-      <div className="space-y-2 flex-1 min-w-0 pr-4">
-        <div className="flex items-center gap-2">
+    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/40 hover:shadow-sm flex items-start justify-between gap-4 border border-[var(--glass-border)]">
+      {/* Monogram Icon */}
+      <div className="w-8 h-8 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+        {brandLetter}
+      </div>
+
+      {/* Content Area */}
+      <div className="space-y-1.5 flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
           {mail.needsAction && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500 shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500">
               Needs Action
             </span>
           )}
           {mail.isMeeting && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500">
               Meeting
             </span>
           )}
           {typeof mail.confidence === 'number' && (
             <button
               onClick={() => setShowWhy((v) => !v)}
-              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition shrink-0"
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
             >
               {mail.confidence}% match · Why?
             </button>
           )}
+          <span className="text-[11px] text-[var(--text-muted)] ml-auto sm:ml-0">
+            {mail.receivedAgo || 'Recently'}
+          </span>
         </div>
 
         <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)] break-words">
@@ -95,51 +88,28 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
             {mail.reasoning}
           </p>
         )}
-
-        {showDatePicker && (
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="date"
-              value={manualDate}
-              onChange={(e) => setManualDate(e.target.value)}
-              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
-            />
-            <input
-              type="time"
-              value={manualTime}
-              onChange={(e) => setManualTime(e.target.value)}
-              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
-            />
-            <button
-              onClick={handleManualConfirm}
-              className="text-xs px-3 py-1.5 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-500"
-            >
-              Add
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Right Action Controls (Pinned on the right side) */}
-      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+      {/* Action Controls: Faded until row is hovered */}
+      <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity pt-0.5">
         <button
           onClick={() => setPendingAction('archive')}
-          className="text-xs font-medium px-3 py-1.5 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
+          className="text-xs font-medium px-2.5 py-1 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
         >
           Archive
         </button>
         <button
           onClick={() => setPendingAction('delete')}
-          className="text-xs font-medium px-3 py-1.5 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
+          className="text-xs font-medium px-2.5 py-1 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
         >
           Delete
         </button>
         {mail.isMeeting && (
           <button
-            onClick={handleCalendarClick}
-            className="text-xs font-medium px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-500 transition"
+            onClick={() => onAddToCalendar(mail)}
+            className="text-xs font-medium px-2.5 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-500 transition"
           >
-            {mail.meetingTime ? 'Add to Cal' : 'Schedule'}
+            Schedule
           </button>
         )}
       </div>
