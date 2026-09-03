@@ -1,15 +1,17 @@
 .counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
   color: var(--accent);
   background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
+  border: 1px solid var(--accent-border);
+  transition: all 0.2s ease;
   margin-bottom: 24px;
 
   &:hover {
-    border-color: var(--accent-border);
+    background: var(--accent);
+    color: var(--accent-primary-text);
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -116,18 +118,22 @@
   }
 
   a {
-    color: var(--text-h);
-    font-size: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
     border-radius: 6px;
     background: var(--social-bg);
+    border: 1px solid var(--border);
     display: flex;
-    padding: 6px 12px;
+    padding: 8px 14px;
     align-items: center;
     gap: 8px;
     text-decoration: none;
-    transition: box-shadow 0.3s;
+    transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-primary);
       box-shadow: var(--shadow);
     }
     .button-icon {
@@ -135,7 +141,7 @@
       width: 18px;
     }
   }
-
+  
   @media (max-width: 1024px) {
     margin-top: 20px;
     flex-wrap: wrap;

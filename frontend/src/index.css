@@ -6,46 +6,73 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  /* Warm near-black — dark mode (default) */
-  --bg-base: #101715;
-  --bg-elevated: #17211e;
-  --text-primary: #f1f4ef;
-  --text-secondary: rgba(241, 244, 239, 0.65);
-  --text-muted: rgba(241, 244, 239, 0.4);
+  /* Base & Surfaces */
+  --bg-base: #090d16;
+  --bg-elevated: #0f172a;
+  --bg-subtle: #1e293b;
 
-  --glass-fill: rgba(241, 244, 239, 0.04);
-  --glass-fill-strong: rgba(241, 244, 239, 0.07);
-  --glass-border: #2b3833;
+  /* Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 
-  /* Single muted accent — sage/mint, used sparingly for primary actions */
-  --accent-primary: #9cf0c3;
-  --accent-primary-text: #142017;
+  /* Borders & Glass */
+  --glass-border: #334155;
+  --glass-fill: rgba(255, 255, 255, 0.03);
+  --glass-fill-strong: rgba(255, 255, 255, 0.06);
 
-  /* Semantic colors — muted, not neon */
-  --accent-warm: #d4a76a;
-  --accent-danger: #d98b86;
-  --accent-success: #7ec98f;
+  /* Accents */
+  --accent-primary: #6366f1;
+  --accent-primary-text: #ffffff;
+  --accent-warm: #f59e0b;
+  --accent-danger: #f87171;
+  --accent-success: #34d399;
+
+  /* Backward Compatibility Aliases for App.css */
+  --border: var(--glass-border);
+  --accent: var(--accent-primary);
+  --accent-bg: rgba(99, 102, 241, 0.12);
+  --accent-border: rgba(99, 102, 241, 0.35);
+  --text-h: var(--text-primary);
+  --social-bg: var(--bg-subtle);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="light"] {
-  --bg-base: #f6f6f2;
+  color-scheme: light;
+
+  /* Base & Surfaces */
+  --bg-base: #f8fafc;
   --bg-elevated: #ffffff;
-  --text-primary: #17201d;
-  --text-secondary: rgba(23, 32, 29, 0.65);
-  --text-muted: rgba(23, 32, 29, 0.4);
+  --bg-subtle: #f1f5f9;
 
-  --glass-fill: rgba(23, 32, 29, 0.03);
-  --glass-fill-strong: rgba(23, 32, 29, 0.05);
-  --glass-border: #d9dfda;
+  /* Typography */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 
-  --accent-primary: #6bc99a;
+  /* Borders & Glass */
+  --glass-border: #e2e8f0;
+  --glass-fill: rgba(15, 23, 42, 0.02);
+  --glass-fill-strong: rgba(15, 23, 42, 0.05);
+
+  /* Accents */
+  --accent-primary: #4f46e5;
   --accent-primary-text: #ffffff;
+  --accent-warm: #d97706;
+  --accent-danger: #dc2626;
+  --accent-success: #059669;
 
-  --accent-warm: #b8863f;
-  --accent-danger: #c15f58;
-  --accent-success: #4f9e63;
+  /* Backward Compatibility Aliases for App.css */
+  --border: var(--glass-border);
+  --accent: var(--accent-primary);
+  --accent-bg: rgba(79, 70, 229, 0.08);
+  --accent-border: rgba(79, 70, 229, 0.25);
+  --text-h: var(--text-primary);
+  --social-bg: var(--bg-subtle);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 body {
