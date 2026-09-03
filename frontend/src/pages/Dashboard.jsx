@@ -42,7 +42,8 @@ function Dashboard() {
   const [toastMessage, setToastMessage] = useState(null)
   const [searchFilter, setSearchFilter] = useState('')
 
-  // Sidebar Layout State
+  // Sidebar Layout States
+  const [primaryOpen, setPrimaryOpen] = useState(true)
   const [secondaryOpen, setSecondaryOpen] = useState(true)
 
   // Unified Copilot Chat State
@@ -88,6 +89,12 @@ function Dashboard() {
     fetchAwaitingReplies()
     fetchUnsubscribeCandidates()
   }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates])
+
+  function handleCycleTheme() {
+    if (theme === 'light') setTheme('dark')
+    else if (theme === 'dark') setTheme('system')
+    else setTheme('light')
+  }
 
   async function handleSendMessage(text) {
     const newMessages = [...messages, { role: 'user', content: text }]
@@ -232,75 +239,123 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)]">
-      {/* 1. PRIMARY SLIM SIDEBAR (Icon Rail) */}
-      <aside className="w-16 border-r border-[var(--glass-border)] bg-[var(--bg-elevated)] flex flex-col items-center justify-between py-4 shrink-0 z-40 sticky top-0 h-screen">
-        <div className="flex flex-col items-center gap-5 w-full">
-          {/* Logo Badge */}
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
-            E
-          </div>
-
-          {/* Secondary Drawer Hamburger Toggle */}
-          <button
-            onClick={() => setSecondaryOpen((v) => !v)}
-            title={secondaryOpen ? "Collapse navigation" : "Expand navigation"}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
-          {/* Navigation Action Icons */}
-          <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-[var(--glass-border)]">
-            <button
-              onClick={() => setActiveTab('Newsletter/Promotional')}
-              title="Workbench"
-              className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-600 text-white shadow-sm"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setActiveTab('Awaiting Reply')}
-              title="Awaiting Replies"
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setActiveTab('Unsubscribe')}
-              title="Unsubscribe Cleaner"
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Theme Quick Toggle */}
+    <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">
+      {/* Restore Sidebar Trigger - only renders when BOTH sidebars are hidden */}
+      {!primaryOpen && !secondaryOpen && (
         <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
+          onClick={() => {
+            setPrimaryOpen(true)
+            setSecondaryOpen(true)
+          }}
+          title="Open Sidebar"
+          className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-md transition"
         >
-          {theme === 'dark' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-      </aside>
+      )}
+
+      {/* 1. PRIMARY SLIM SIDEBAR */}
+      <AnimatePresence initial={false}>
+        {primaryOpen && (
+          <motion.aside
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 64, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="border-r border-[var(--glass-border)] bg-[var(--bg-elevated)] flex flex-col items-center justify-between py-4 shrink-0 z-40 sticky top-0 h-screen overflow-hidden"
+          >
+            <div className="flex flex-col items-center gap-4 w-full">
+              <button
+                onClick={() => setPrimaryOpen(false)}
+                title="Collapse slim bar"
+                className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm hover:opacity-90 transition"
+              >
+                E
+              </button>
+
+              <button
+                onClick={() => setSecondaryOpen((v) => !v)}
+                title={secondaryOpen ? "Hide segment drawer" : "Show segment drawer"}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition ${
+                  secondaryOpen ? 'bg-[var(--glass-fill-strong)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)]'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-[var(--glass-border)]">
+                <button
+                  onClick={() => {
+                    setActiveTab('Newsletter/Promotional')
+                    if (!secondaryOpen) setSecondaryOpen(true)
+                  }}
+                  title="Workbench"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-600 text-white shadow-sm"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('Awaiting Reply')
+                    if (!secondaryOpen) setSecondaryOpen(true)
+                  }}
+                  title="Awaiting Replies"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('Unsubscribe')
+                    if (!secondaryOpen) setSecondaryOpen(true)
+                  }}
+                  title="Unsubscribe Cleaner"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <button
+                onClick={handleCycleTheme}
+                title={`Theme: ${theme.toUpperCase()} (Click to cycle)`}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition relative"
+              >
+                {theme === 'light' && (
+                  <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                )}
+                {theme === 'dark' && (
+                  <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+                {theme === 'system' && (
+                  <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                )}
+                <span className="absolute -bottom-1 right-1 text-[8px] font-bold uppercase opacity-60">
+                  {theme === 'system' ? 'sys' : theme === 'light' ? 'lt' : 'dk'}
+                </span>
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       {/* 2. SECONDARY COLLAPSIBLE SIDEBAR */}
       <AnimatePresence initial={false}>
@@ -315,24 +370,35 @@ function Dashboard() {
             <div className="w-64 p-5 flex flex-col h-full justify-between">
               <div className="space-y-5 overflow-y-auto">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">Inbox Segments</span>
+                  <div className="flex items-center gap-1.5">
+                    {!primaryOpen && (
+                      <button
+                        onClick={() => setPrimaryOpen(true)}
+                        title="Expand Slim Bar"
+                        className="p-1 rounded hover:bg-[var(--glass-fill-strong)] text-[var(--text-secondary)] transition"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
+                    <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">Inbox Segments</span>
+                  </div>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--glass-fill-strong)] text-[var(--text-muted)] border border-[var(--glass-border)]">
                     Smart AI
                   </span>
                 </div>
 
-                {/* Filter Search */}
                 <div className="relative">
                   <input
                     type="text"
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     placeholder="Search filters..."
-                    className="w-full text-xs px-2.5 py-1.5 rounded-md border border-[var(--glass-border)] bg-[var(--bg-base)] text-[var(--text-primary)] outline-none"
+                    className="w-full text-xs px-2.5 py-1.5 rounded-md border border-[var(--glass-border)] bg-[var(--bg-base)] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
                   />
                 </div>
 
-                {/* Categories */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] px-1 block mb-2">
                     Priority Categories
@@ -401,26 +467,9 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Drawer Footer Appearance */}
-              <div className="pt-4 border-t border-[var(--glass-border)]">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
-                  Appearance
-                </p>
-                <div className="flex gap-1 bg-[var(--bg-subtle)] p-1 rounded-lg border border-[var(--glass-border)]">
-                  {['light', 'dark', 'system'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setTheme(mode)}
-                      className={`flex-1 py-1 rounded text-[11px] font-medium capitalize transition ${
-                        theme === mode
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
+              <div className="pt-3 border-t border-[var(--glass-border)] text-[10px] text-[var(--text-muted)] flex items-center justify-between">
+                <span>Envoy Engine v1.0</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               </div>
             </div>
           </motion.aside>
@@ -430,7 +479,6 @@ function Dashboard() {
       {/* 3. CENTER DYNAMIC FEED */}
       <main className="flex-1 min-w-0 p-8 flex flex-col h-screen overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto flex-1">
-          {/* Header */}
           <header className="flex justify-between items-center pb-5 border-b border-[var(--glass-border)] mb-6">
             <div>
               <h1 className="text-xl font-bold tracking-tight">{activeTab}</h1>
@@ -461,7 +509,6 @@ function Dashboard() {
 
           {error && <p className="mb-4 text-xs text-[var(--accent-danger)]">Error: {error}</p>}
 
-          {/* Cards List */}
           <div className="space-y-3 pb-16">
             {renderTabContent()}
           </div>

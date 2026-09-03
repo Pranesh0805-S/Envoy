@@ -36,7 +36,7 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
         className="glass-panel rounded-lg p-4 flex items-center justify-between border"
         style={{ borderColor: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
       >
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 pr-4">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-danger)]">
             Confirm {pendingAction}
           </span>
@@ -62,36 +62,36 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   }
 
   return (
-    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      {/* Left Content: Tags & Summary */}
-      <div className="space-y-1.5 flex-1 min-w-0">
+    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Left Content Area (Contains all text; protected from overlapping) */}
+      <div className="space-y-2 flex-1 min-w-0 pr-4">
         <div className="flex items-center gap-2">
           {mail.needsAction && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500 shrink-0">
               Needs Action
             </span>
           )}
           {mail.isMeeting && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 shrink-0">
               Meeting
             </span>
           )}
           {typeof mail.confidence === 'number' && (
             <button
               onClick={() => setShowWhy((v) => !v)}
-              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition shrink-0"
             >
               {mail.confidence}% match · Why?
             </button>
           )}
         </div>
 
-        <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)]">
+        <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)] break-words">
           {mail.summary}
         </p>
 
         {showWhy && mail.reasoning && (
-          <p className="text-xs p-2 rounded bg-[var(--bg-subtle)] text-[var(--text-secondary)] mt-2">
+          <p className="text-xs p-2.5 rounded-md bg-[var(--bg-subtle)] text-[var(--text-secondary)] mt-2 leading-relaxed">
             {mail.reasoning}
           </p>
         )}
@@ -102,17 +102,17 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
               type="date"
               value={manualDate}
               onChange={(e) => setManualDate(e.target.value)}
-              className="text-xs px-2 py-1 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
             />
             <input
               type="time"
               value={manualTime}
               onChange={(e) => setManualTime(e.target.value)}
-              className="text-xs px-2 py-1 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
             />
             <button
               onClick={handleManualConfirm}
-              className="text-xs px-2.5 py-1 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-500"
+              className="text-xs px-3 py-1.5 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-500"
             >
               Add
             </button>
@@ -120,17 +120,17 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
         )}
       </div>
 
-      {/* Right Controls: Actions */}
-      <div className="flex items-center gap-1 shrink-0 self-end md:self-center opacity-80 group-hover:opacity-100 transition-opacity">
+      {/* Right Action Controls (Pinned on the right side) */}
+      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
         <button
           onClick={() => setPendingAction('archive')}
-          className="text-xs font-medium px-2.5 py-1.5 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
+          className="text-xs font-medium px-3 py-1.5 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
         >
           Archive
         </button>
         <button
           onClick={() => setPendingAction('delete')}
-          className="text-xs font-medium px-2.5 py-1.5 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
+          className="text-xs font-medium px-3 py-1.5 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
         >
           Delete
         </button>
