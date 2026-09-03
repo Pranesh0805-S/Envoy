@@ -129,7 +129,6 @@ function Dashboard() {
     }
   }
 
-  // Direct batch execution: eliminates individual pending approval cards
   async function handleBulkAction(mails, actionType) {
     if (!mails.length || bulkProcessing) return
     setBulkProcessing(true)
@@ -266,7 +265,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">
-      {/* Restore Sidebar Trigger - appears only if both sidebars are closed */}
+      {/* Floating Restore Trigger - ONLY renders when BOTH sidebars are hidden */}
       {!primaryOpen && !secondaryOpen && (
         <button
           onClick={() => {
@@ -503,17 +502,18 @@ function Dashboard() {
       </AnimatePresence>
 
       {/* 3. CENTER DYNAMIC FEED */}
-      <main className="flex-1 min-w-0 p-8 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 min-w-0 px-8 py-5 flex flex-col h-screen overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto flex-1">
-          <header className="flex justify-between items-center pb-5 border-b border-[var(--glass-border)] mb-6">
+          {/* Flush-Aligned Top Header */}
+          <header className="flex justify-between items-center pb-4 border-b border-[var(--glass-border)] mb-5">
             <div>
-              <h1 className="text-xl font-bold tracking-tight">{activeTab}</h1>
+              <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{activeTab}</h1>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                AI triage summaries and recommendations.
+                AI triage summaries and actionable recommendations.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
                 <button
                   onClick={() => handleBulkAction(activeMails, 'archive')}
@@ -548,7 +548,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Improved Pending Approvals Popover with Batch Control */}
+        {/* Pending Approvals Tray */}
         {pendingActions.length > 0 && (
           <div className="fixed bottom-24 right-6 w-84 glass-panel-strong rounded-xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto border border-[var(--glass-border)] shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-border)]">

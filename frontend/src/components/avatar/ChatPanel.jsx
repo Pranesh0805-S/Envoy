@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
+const SUGGESTED_PROMPTS = [
+  "Summarize today's urgent mail",
+  "Clean up newsletters",
+  "Find unreplied threads"
+]
+
 function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock }) {
   const [input, setInput] = useState('')
   const scrollRef = useRef(null)
@@ -9,8 +15,8 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  function handleSend() {
-    const text = input.trim()
+  function handleSend(textToSend) {
+    const text = (textToSend || input).trim()
     if (!text || loading) return
     setInput('')
     onSend(text)
@@ -45,7 +51,6 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Dock / Expand Toggle */}
           <button
             onClick={onToggleDock}
             type="button"
@@ -63,7 +68,6 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
             )}
           </button>
 
-          {/* Close Button */}
           <button
             onClick={onClose}
             type="button"
@@ -84,9 +88,12 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
               m.role === 'user' ? 'ml-auto' : 'mr-auto'
             }`}
           >
+            {/* Organic Asymmetrical Bubble */}
             <div
-              className={`p-3 rounded-lg ${
-                m.role === 'user' ? 'font-medium' : 'border'
+              className={`p-3 rounded-2xl ${
+                m.role === 'user'
+                  ? 'rounded-br-sm font-medium'
+                  : 'rounded-tl-sm border'
               }`}
               style={
                 m.role === 'user'
@@ -118,6 +125,27 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
             )}
           </div>
         ))}
+
+        {/* Quick Suggestion Chips (Visible on intro state) */}
+        {messages.length === 1 && (
+          <div className="pt-2 space-y-1.5">
+            <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block px-1">
+              Suggested Actions
+            </span>
+            <div className="flex flex-col gap-1.5">
+              {SUGGESTED_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => handleSend(prompt)}
+                  className="text-left text-xs px-3 py-2 rounded-lg border border-[var(--glass-border)] bg-[var(--bg-subtle)] hover:bg-[var(--glass-fill-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition"
+                >
+                  {prompt} →
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="mr-auto px-3 py-2 text-xs opacity-50 flex items-center gap-1.5 text-[var(--text-secondary)]">
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"></span>
@@ -127,17 +155,17 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
         )}
       </div>
 
-      {/* Input Area */}
+      {/* Input Field */}
       <div className="p-3 border-t border-[var(--glass-border)] flex gap-2 shrink-0">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask a question or request an action..."
-          className="flex-1 rounded-md px-3 py-2 text-xs outline-none border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+          className="flex-1 rounded-md px-3 py-2 text-xs outline-none border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
         />
         <button
-          onClick={handleSend}
+          onClick={() => handleSend()}
           disabled={loading || !input.trim()}
           className="px-3.5 py-2 rounded-md text-xs font-semibold tracking-wide uppercase transition disabled:opacity-40"
           style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}

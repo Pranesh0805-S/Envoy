@@ -2,11 +2,46 @@ import { useState } from 'react'
 
 function MailCard({ mail, onExecute, onAddToCalendar }) {
   const [showWhy, setShowWhy] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [manualDate, setManualDate] = useState('')
+  const [manualTime, setManualTime] = useState('')
   const [pendingAction, setPendingAction] = useState(null)
   const [executing, setExecuting] = useState(false)
 
-  // Extract a fallback 1-letter monogram from the brand name or summary
-  const brandLetter = (mail.from || mail.summary || 'E').trim().charAt(0).toUpperCase()
+  // 1. Smart Name & Brand Extraction: Prioritize clean sender, then summary anchor
+  const summaryText = mail.summary || ''
+  const firstWord = summaryText.split(' ')[0] || ''
+  
+  // Extract a clean sender or fallback to company/topic from summary
+  let brand = mail.from?.replace(/<.*>/, '').replace(/"/g, '').trim()
+  if (!brand || brand.toLowerCase() === 'mail') {
+    brand = firstWord || 'Inbox'
+  }
+
+  // Generate dynamic monogram
+  const brandInitial = brand.charAt(0).toUpperCase() || 'E'
+
+  // Extract a clear heading from subject, or summarize the primary topic
+  const headline = mail.subject && mail.subject.toLowerCase() !== 'mail' && mail.subject.toLowerCase() !== '(no subject)'
+    ? mail.subject
+    : summaryText.split(/[—\-:]/)[0]?.trim() || summaryText.slice(0, 50)
+
+  const relativeTime = mail.receivedAgo || mail.date || 'Today'
+
+  function handleCalendarClick() {
+    if (mail.meetingTime) {
+      onAddToCalendar(mail)
+    } else {
+      setShowDatePicker((v) => !v)
+    }
+  }
+
+  function handleManualConfirm() {
+    if (!manualDate || !manualTime) return
+    const combined = `${manualDate}T${manualTime}:00`
+    onAddToCalendar({ ...mail, meetingTime: combined })
+    setShowDatePicker(false)
+  }
 
   async function handleConfirm() {
     setExecuting(true)
@@ -18,14 +53,14 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   if (pendingAction) {
     return (
       <div
-        className="glass-panel rounded-lg p-4 flex items-center justify-between border shadow-sm"
+        className="rounded-lg p-4 flex items-center justify-between border bg-[var(--bg-elevated)] shadow-sm"
         style={{ borderColor: pendingAction === 'delete' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
       >
         <div className="space-y-0.5 pr-4">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-danger)]">
             Confirm {pendingAction}
           </span>
-          <p className="text-sm font-medium text-[var(--text-primary)]">{mail.summary}</p>
+          <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-1">{headline}</p>
         </div>
         <div className="flex gap-2 shrink-0">
           <button
@@ -47,69 +82,111 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   }
 
   return (
-    <div className="group glass-panel rounded-lg p-4 transition-all duration-150 hover:border-slate-400/40 hover:shadow-sm flex items-start justify-between gap-4 border border-[var(--glass-border)]">
-      {/* Monogram Icon */}
-      <div className="w-8 h-8 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-        {brandLetter}
+    <div className="group relative rounded-lg p-4 bg-[var(--bg-elevated)] border border-[var(--glass-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-400/40 flex items-start justify-between gap-4">
+      {/* Brand Monogram */}
+      <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 select-none border border-indigo-500/20">
+        {brandInitial}
       </div>
 
-      {/* Content Area */}
-      <div className="space-y-1.5 flex-1 min-w-0">
+      {/* Main Content */}
+      <div className="space-y-1 flex-1 min-w-0 pr-2">
+        {/* Top Metadata Row */}
         <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-[var(--text-primary)] truncate max-w-[200px]">
+            {brand}
+          </span>
+
           {mail.needsAction && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500">
-              Needs Action
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-500/10 text-red-500 shrink-0">
+              Action Required
             </span>
           )}
           {mail.isMeeting && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500">
-              Meeting
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 shrink-0">
+              Calendar
             </span>
           )}
+
           {typeof mail.confidence === 'number' && (
             <button
               onClick={() => setShowWhy((v) => !v)}
-              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+              className="text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition shrink-0"
             >
               {mail.confidence}% match · Why?
             </button>
           )}
-          <span className="text-[11px] text-[var(--text-muted)] ml-auto sm:ml-0">
-            {mail.receivedAgo || 'Recently'}
+
+          <span className="text-[11px] text-[var(--text-muted)] ml-auto">
+            {relativeTime}
           </span>
         </div>
 
-        <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)] break-words">
-          {mail.summary}
+        {/* Clean Single Headline & Summary Body */}
+        <p className="text-sm font-medium leading-relaxed text-[var(--text-primary)] break-words pt-0.5">
+          {summaryText}
         </p>
 
         {showWhy && mail.reasoning && (
-          <p className="text-xs p-2.5 rounded-md bg-[var(--bg-subtle)] text-[var(--text-secondary)] mt-2 leading-relaxed">
+          <p className="text-xs p-2.5 rounded-md bg-[var(--bg-subtle)] text-[var(--text-secondary)] mt-2 leading-relaxed border border-[var(--glass-border)]">
             {mail.reasoning}
           </p>
         )}
+
+        {showDatePicker && (
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="date"
+              value={manualDate}
+              onChange={(e) => setManualDate(e.target.value)}
+              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+            />
+            <input
+              type="time"
+              value={manualTime}
+              onChange={(e) => setManualTime(e.target.value)}
+              className="text-xs px-2 py-1.5 rounded border border-[var(--glass-border)] bg-transparent text-[var(--text-primary)]"
+            />
+            <button
+              onClick={handleManualConfirm}
+              className="text-xs px-3 py-1.5 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-500"
+            >
+              Add
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Action Controls: Faded until row is hovered */}
-      <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity pt-0.5">
+      {/* Action Controls (Clean hover reveal) */}
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pt-0.5">
         <button
           onClick={() => setPendingAction('archive')}
-          className="text-xs font-medium px-2.5 py-1 rounded text-[var(--text-secondary)] hover:bg-[var(--glass-fill-strong)] hover:text-[var(--text-primary)] transition"
+          title="Archive email"
+          className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-fill-strong)] transition"
         >
-          Archive
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
         </button>
+
         <button
           onClick={() => setPendingAction('delete')}
-          className="text-xs font-medium px-2.5 py-1 rounded text-[var(--accent-danger)] hover:bg-red-500/10 transition"
+          title="Delete email"
+          className="p-1.5 rounded-md text-[var(--accent-danger)] hover:bg-red-500/10 transition"
         >
-          Delete
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
         </button>
+
         {mail.isMeeting && (
           <button
-            onClick={() => onAddToCalendar(mail)}
-            className="text-xs font-medium px-2.5 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-500 transition"
+            onClick={handleCalendarClick}
+            title="Add to Calendar"
+            className="p-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-500 transition ml-1"
           >
-            Schedule
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </button>
         )}
       </div>
