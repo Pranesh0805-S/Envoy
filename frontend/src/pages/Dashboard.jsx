@@ -31,7 +31,6 @@ function Dashboard() {
     fetchPendingActions,
     fetchAwaitingReplies,
     fetchUnsubscribeCandidates,
-    proposeAction,
     executeAction,
     approveAction,
     rejectAction,
@@ -41,6 +40,7 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('Newsletter/Promotional')
   const [toastMessage, setToastMessage] = useState(null)
   const [searchFilter, setSearchFilter] = useState('')
+  const [bulkProcessing, setBulkProcessing] = useState(false)
 
   // Sidebar Layout States
   const [primaryOpen, setPrimaryOpen] = useState(true)
@@ -129,10 +129,36 @@ function Dashboard() {
     }
   }
 
+  // Direct batch execution: eliminates individual pending approval cards
   async function handleBulkAction(mails, actionType) {
-    for (const mail of mails) {
-      await proposeAction(mail.gmailId, actionType, mail.summary)
+    if (!mails.length || bulkProcessing) return
+    setBulkProcessing(true)
+    try {
+      await Promise.all(
+        mails.map((mail) => executeAction(mail.gmailId, actionType, mail.summary))
+      )
+      setToastMessage(`Successfully ${actionType}d ${mails.length} emails.`)
+    } catch (err) {
+      setToastMessage(`Bulk ${actionType} failed: ${err.message}`)
+    } finally {
+      setBulkProcessing(false)
     }
+  }
+
+  async function handleApproveAllPending() {
+    const actions = [...pendingActions]
+    for (const action of actions) {
+      await approveAction(action.id)
+    }
+    setToastMessage(`Approved all ${actions.length} actions.`)
+  }
+
+  async function handleRejectAllPending() {
+    const actions = [...pendingActions]
+    for (const action of actions) {
+      await rejectAction(action.id)
+    }
+    setToastMessage(`Dismissed all pending actions.`)
   }
 
   async function handleAddToCalendar(mail) {
@@ -240,7 +266,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">
-      {/* Restore Sidebar Trigger - only renders when BOTH sidebars are hidden */}
+      {/* Restore Sidebar Trigger - appears only if both sidebars are closed */}
       {!primaryOpen && !secondaryOpen && (
         <button
           onClick={() => {
@@ -297,7 +323,7 @@ function Dashboard() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-600 text-white shadow-sm"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                   </svg>
                 </button>
                 <button
@@ -491,9 +517,17 @@ function Dashboard() {
               {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
                 <button
                   onClick={() => handleBulkAction(activeMails, 'archive')}
-                  className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition"
+                  disabled={bulkProcessing}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  Archive all {activeMails.length}
+                  {bulkProcessing ? (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
+                      Archiving...
+                    </>
+                  ) : (
+                    `Archive all ${activeMails.length}`
+                  )}
                 </button>
               )}
 
@@ -514,22 +548,42 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Improved Pending Approvals Popover with Batch Control */}
         {pendingActions.length > 0 && (
-          <div className="fixed bottom-24 right-6 w-80 glass-panel-strong rounded-xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto">
-            <h3 className="font-semibold text-xs text-[var(--text-primary)]">
-              Pending Approvals ({pendingActions.length})
-            </h3>
-            {pendingActions.map((action) => {
-              if (!action?.id) return null
-              return (
-                <ApprovalCard
-                  key={action.id}
-                  action={action}
-                  onApprove={(id) => approveAction(id)}
-                  onReject={(id) => rejectAction(id)}
-                />
-              )
-            })}
+          <div className="fixed bottom-24 right-6 w-84 glass-panel-strong rounded-xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto border border-[var(--glass-border)] shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-border)]">
+              <h3 className="font-semibold text-xs text-[var(--text-primary)]">
+                Pending Approvals ({pendingActions.length})
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleApproveAllPending}
+                  className="text-[10px] font-semibold px-2 py-1 rounded bg-emerald-500/15 text-[var(--accent-success)] hover:bg-emerald-500/25 transition"
+                >
+                  Approve All
+                </button>
+                <button
+                  onClick={handleRejectAllPending}
+                  className="text-[10px] font-medium px-2 py-1 rounded hover:bg-[var(--glass-fill-strong)] text-[var(--text-muted)] transition"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {pendingActions.map((action) => {
+                if (!action?.id) return null
+                return (
+                  <ApprovalCard
+                    key={action.id}
+                    action={action}
+                    onApprove={(id) => approveAction(id)}
+                    onReject={(id) => rejectAction(id)}
+                  />
+                )
+              })}
+            </div>
           </div>
         )}
 
