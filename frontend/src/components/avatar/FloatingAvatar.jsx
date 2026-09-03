@@ -1,14 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../../lib/supabaseClient'
-import ChatPanel from './ChatPanel'
 
 const hexPaths = {
   a: "M50 4 L90 27 L90 73 L50 96 L10 73 L10 27 Z",
   b: "M50 7 L87 28 L88 72 L50 93 L13 72 L12 28 Z",
 }
 
-function BlobAvatar({ state, size = 44 }) {
+export function BlobAvatar({ state, size = 40 }) {
   const [blink, setBlink] = useState(false)
   const [wink, setWink] = useState(false)
 
@@ -90,97 +88,4 @@ function BlobAvatar({ state, size = 44 }) {
   )
 }
 
-function FloatingAvatar() {
-  const [open, setOpen] = useState(false)
-  const [avatarState, setAvatarState] = useState('idle')
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi, I'm Envoy. Ask me about your inbox — what's urgent, what needs a reply, or anything else." }
-  ])
-  const wasClosedDuringReply = useRef(false)
-
-  async function sendMessage(text) {
-    const newMessages = [...messages, { role: 'user', content: text }]
-    setMessages(newMessages)
-    setAvatarState('thinking')
-    wasClosedDuringReply.current = !open
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('No session')
-
-      const history = newMessages
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .slice(0, -1)
-        .map((m) => ({ role: m.role, content: m.content }))
-
-      const res = await fetch('http://localhost:5000/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ message: text, history }),
-      })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error)
-
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: result.reply, draft: result.draft || null },
-      ])
-      setAvatarState(wasClosedDuringReply.current ? 'alert' : 'idle')
-    } catch (err) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
-      setAvatarState(wasClosedDuringReply.current ? 'alert' : 'idle')
-    }
-  }
-
-  function handleToggle() {
-    if (!open && avatarState === 'alert') {
-      setAvatarState('greet')
-      setTimeout(() => setAvatarState('idle'), 600)
-    }
-    setOpen((v) => !v)
-  }
-
-  return (
-    <>
-      {/* Docked Mascot Pill */}
-      <motion.button
-        onClick={handleToggle}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.96 }}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border shadow-xl transition-colors backdrop-blur-md"
-        style={{
-          background: 'var(--bg-elevated)',
-          borderColor: avatarState === 'alert' ? 'var(--accent-warm)' : 'var(--glass-border)',
-        }}
-      >
-        <div className="relative flex items-center justify-center">
-          <BlobAvatar state={avatarState} size={40} />
-          {/* Subtle live indicator pulse */}
-          <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${avatarState === 'thinking' ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${avatarState === 'thinking' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-          </span>
-        </div>
-        <div className="flex flex-col text-left">
-          <span className="text-xs font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>Envoy</span>
-          <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>
-            {avatarState === 'thinking' ? 'Thinking...' : avatarState === 'alert' ? 'New Update' : 'AI Copilot'}
-          </span>
-        </div>
-      </motion.button>
-
-      <AnimatePresence>
-        {open && (
-          <ChatPanel
-            messages={messages}
-            onSend={sendMessage}
-            onClose={() => setOpen(false)}
-            loading={avatarState === 'thinking'}
-          />
-        )}
-      </AnimatePresence>
-    </>
-  )
-}
-
-export default FloatingAvatar
+export default BlobAvatar
