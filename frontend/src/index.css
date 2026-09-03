@@ -8,36 +8,41 @@
 :root {
   color-scheme: dark;
 
-  /* Base & Surfaces */
-  --bg-base: #090d16;
-  --bg-elevated: #0f172a;
-  --bg-subtle: #1e293b;
+  /* Neutral SaaS Charcoal Dark Theme */
+  --bg-base: #0c0d0e;          /* Clean near-black canvas */
+  --bg-elevated: #16181a;      /* Distinct card & modal surface */
+  --bg-subtle: #202427;        /* Inactive chips and badges */
 
-  /* Typography */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  /* Crisp Typography */
+  --text-primary: #f4f4f5;     /* High contrast white */
+  --text-secondary: #a1a1aa;   /* Soft legible grey */
+  --text-muted: #71717a;       /* Metadata / inactive count */
 
-  /* Borders & Glass */
-  --glass-border: #334155;
-  --glass-fill: rgba(255, 255, 255, 0.03);
-  --glass-fill-strong: rgba(255, 255, 255, 0.06);
+  /* Subtle, non-glowing borders */
+  --glass-border: #27272a;     /* Clean 1px border */
+  --glass-fill: rgba(255, 255, 255, 0.02);
+  --glass-fill-strong: rgba(255, 255, 255, 0.05);
 
-  /* Accents */
-  --accent-primary: #6366f1;
+  /* Focused, balanced accent */
+  --accent-primary: #4f46e5;   /* Balanced deep indigo */
   --accent-primary-text: #ffffff;
   --accent-warm: #f59e0b;
-  --accent-danger: #f87171;
-  --accent-success: #34d399;
+  --accent-danger: #ef4444;
+  --accent-success: #10b981;
 
-  /* Backward Compatibility Aliases for App.css */
+  /* Global Border Radius Tokens */
+  --radius-sm: 6px;            /* Badges, tags, inner pills */
+  --radius-md: 8px;            /* Buttons, inputs */
+  --radius-lg: 10px;           /* Cards, panels */
+
+  /* Backward Compatibility Aliases */
   --border: var(--glass-border);
   --accent: var(--accent-primary);
-  --accent-bg: rgba(99, 102, 241, 0.12);
-  --accent-border: rgba(99, 102, 241, 0.35);
+  --accent-bg: rgba(79, 70, 229, 0.12);
+  --accent-border: rgba(79, 70, 229, 0.35);
   --text-h: var(--text-primary);
   --social-bg: var(--bg-subtle);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
@@ -87,13 +92,15 @@ body {
 .glass-panel {
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg); /* Replaces overly rounded 16px/24px */
   transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
 }
 
 .glass-panel-strong {
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .glass-btn {
@@ -117,8 +124,8 @@ body {
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md); /* Reduced from 12px */
   font-size: 14px;
   z-index: 100;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
