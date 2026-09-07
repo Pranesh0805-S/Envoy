@@ -21,6 +21,9 @@ router.get('/digest-smart', verifyAuth, async (req, res) => {
     const merged = categorized.map((item, i) => ({
       ...item,
       gmailId: digest[i]?.id,
+      from: digest[i]?.from,
+      subject: digest[i]?.subject,
+      date: digest[i]?.date,
     }))
 
     res.json({ digest, categorized: merged })

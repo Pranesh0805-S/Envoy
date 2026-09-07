@@ -7,44 +7,82 @@
 
 :root {
   color-scheme: dark;
+
+  /* Neutral SaaS Charcoal Dark Theme */
   --bg-base: #0c0d0e;
   --bg-elevated: #16181a;
   --bg-subtle: #202427;
 
+  /* Crisp Typography */
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
 
+  /* Subtle Borders */
   --glass-border: #27272a;
   --glass-fill: rgba(255, 255, 255, 0.02);
   --glass-fill-strong: rgba(255, 255, 255, 0.05);
 
+  /* Focused Accents */
   --accent-primary: #4f46e5;
   --accent-primary-text: #ffffff;
   --accent-warm: #f59e0b;
   --accent-danger: #ef4444;
   --accent-success: #10b981;
+
+  /* Global Border Radius Tokens */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Backward Compatibility Aliases */
+  --border: var(--glass-border);
+  --accent: var(--accent-primary);
+  --accent-bg: rgba(79, 70, 229, 0.12);
+  --accent-border: rgba(79, 70, 229, 0.35);
+  --text-h: var(--text-primary);
+  --social-bg: var(--bg-subtle);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
   color-scheme: light;
+
+  /* Base & Surfaces */
   --bg-base: #f8fafc;
   --bg-elevated: #ffffff;
   --bg-subtle: #f1f5f9;
 
+  /* Typography */
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
 
+  /* Borders & Glass */
   --glass-border: #e2e8f0;
   --glass-fill: rgba(15, 23, 42, 0.02);
   --glass-fill-strong: rgba(15, 23, 42, 0.05);
 
+  /* Accents */
   --accent-primary: #4f46e5;
   --accent-primary-text: #ffffff;
   --accent-warm: #d97706;
   --accent-danger: #dc2626;
   --accent-success: #059669;
+
+  /* Global Border Radius Tokens */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Backward Compatibility Aliases */
+  --border: var(--glass-border);
+  --accent: var(--accent-primary);
+  --accent-bg: rgba(79, 70, 229, 0.08);
+  --accent-border: rgba(79, 70, 229, 0.25);
+  --text-h: var(--text-primary);
+  --social-bg: var(--bg-subtle);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 body {
@@ -58,20 +96,27 @@ body {
 .glass-panel {
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s ease;
+  border-radius: var(--radius-lg);
+  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
 }
+
 .glass-panel-strong {
   background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
+
 .glass-btn {
-  transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, border-color 0.2s ease;
 }
-.glass-btn:hover { transform: translateY(-1px); border-color: var(--accent-primary); }
-.glass-btn:active { transform: scale(0.97) translateY(0px); }
+.glass-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-primary);
+}
+.glass-btn:active {
+  transform: scale(0.97) translateY(0px);
+}
 
 .toast {
   position: fixed;
@@ -82,12 +127,16 @@ body {
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   z-index: 100;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-input[type="date"], input[type="time"] { color-scheme: dark; }
+input[type="date"], input[type="time"] {
+  color-scheme: dark;
+}
 [data-theme="light"] input[type="date"],
-[data-theme="light"] input[type="time"] { color-scheme: light; }
+[data-theme="light"] input[type="time"] {
+  color-scheme: light;
+}

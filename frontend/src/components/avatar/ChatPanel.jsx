@@ -88,7 +88,6 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
               m.role === 'user' ? 'ml-auto' : 'mr-auto'
             }`}
           >
-            {/* Organic Asymmetrical Bubble */}
             <div
               className={`p-3 rounded-2xl ${
                 m.role === 'user'
@@ -126,7 +125,6 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
           </div>
         ))}
 
-        {/* Quick Suggestion Chips (Visible on intro state) */}
         {messages.length === 1 && (
           <div className="pt-2 space-y-1.5">
             <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block px-1">
@@ -155,7 +153,7 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
         )}
       </div>
 
-      {/* Input Field */}
+      {/* Input */}
       <div className="p-3 border-t border-[var(--glass-border)] flex gap-2 shrink-0">
         <input
           value={input}

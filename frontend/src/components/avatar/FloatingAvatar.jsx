@@ -1,14 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../../lib/supabaseClient'
-import ChatPanel from './ChatPanel'
 
 const hexPaths = {
   a: "M50 4 L90 27 L90 73 L50 96 L10 73 L10 27 Z",
   b: "M50 7 L87 28 L88 72 L50 93 L13 72 L12 28 Z",
 }
 
-export function BlobAvatar({ state, size = 110 }) {
+export function BlobAvatar({ state, size = 40 }) {
   const [blink, setBlink] = useState(false)
   const [wink, setWink] = useState(false)
 
@@ -32,7 +30,6 @@ export function BlobAvatar({ state, size = 110 }) {
         fill="url(#blobGradient)"
         animate={{ d: [hexPaths.a, hexPaths.b, hexPaths.a] }}
         transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ filter: 'drop-shadow(0 8px 20px rgba(47,95,208,0.35))' }}
       />
       <defs>
         <linearGradient id="blobGradient" x1="0" y1="0" x2="1" y2="1">
@@ -91,80 +88,4 @@ export function BlobAvatar({ state, size = 110 }) {
   )
 }
 
-function FloatingAvatar() {
-  const [open, setOpen] = useState(false)
-  const [avatarState, setAvatarState] = useState('idle')
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi, I'm Envoy. Ask me about your inbox — what's urgent, what needs a reply, or anything else." }
-  ])
-  const wasClosedDuringReply = useRef(false)
-
-  async function sendMessage(text) {
-    const newMessages = [...messages, { role: 'user', content: text }]
-    setMessages(newMessages)
-    setAvatarState('thinking')
-    wasClosedDuringReply.current = !open
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('No session')
-
-      const history = newMessages
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .slice(0, -1)
-        .map((m) => ({ role: m.role, content: m.content }))
-
-      const res = await fetch('http://localhost:5000/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ message: text, history }),
-      })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error)
-
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: result.reply, draft: result.draft || null },
-      ])
-      setAvatarState(wasClosedDuringReply.current ? 'alert' : 'idle')
-    } catch (err) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
-      setAvatarState(wasClosedDuringReply.current ? 'alert' : 'idle')
-    }
-  }
-
-  function handleToggle() {
-    if (!open && avatarState === 'alert') {
-      setAvatarState('greet')
-      setTimeout(() => setAvatarState('idle'), 600)
-    }
-    setOpen((v) => !v)
-  }
-
-  return (
-    <>
-      <motion.button
-        onClick={handleToggle}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.94 }}
-        className="fixed bottom-6 right-6 z-50"
-        style={{ background: 'transparent', border: 'none' }}
-      >
-        <BlobAvatar state={avatarState} size={110} />
-      </motion.button>
-
-      <AnimatePresence>
-        {open && (
-          <ChatPanel
-            messages={messages}
-            onSend={sendMessage}
-            onClose={() => setOpen(false)}
-            loading={avatarState === 'thinking'}
-          />
-        )}
-      </AnimatePresence>
-    </>
-  )
-}
-
-export default FloatingAvatar
+export default BlobAvatar
