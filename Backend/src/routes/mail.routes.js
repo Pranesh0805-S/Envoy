@@ -3,6 +3,7 @@ const router = express.Router()
 const verifyAuth = require('../middleware/auth')
 const { getInboxDigest, getAwaitingReplies, getUnsubscribeCandidates } = require('../services/gmailService')
 const { categorizeInbox } = require('../services/agentService')
+const { getVipRules, applyVipRules } = require('../services/vipRulesService')
 
 router.get('/digest', verifyAuth, async (req, res) => {
   try {
@@ -26,7 +27,10 @@ router.get('/digest-smart', verifyAuth, async (req, res) => {
       date: digest[i]?.date,
     }))
 
-    res.json({ digest, categorized: merged })
+    const rules = await getVipRules(req.user.id)
+    const final = applyVipRules(merged, digest, rules)
+
+    res.json({ digest, categorized: final })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

@@ -139,6 +139,52 @@ export function useInboxData() {
     return acc
   }, {})
 
+  const [vipRules, setVipRules] = useState([])
+
+  const fetchVipRules = useCallback(async () => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/vip-rules`, { headers })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      setVipRules(result.rules)
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [])
+
+  const createVipRule = useCallback(async (ruleType, ruleValue, action) => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/vip-rules`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ruleType, ruleValue, action }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      await fetchVipRules()
+      return result.rule
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [fetchVipRules])
+
+  const deleteVipRule = useCallback(async (ruleId) => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/vip-rules/${ruleId}`, {
+        method: 'DELETE',
+        headers,
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      await fetchVipRules()
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [fetchVipRules])
+
   return {
     categorized,
     grouped,
@@ -155,5 +201,9 @@ export function useInboxData() {
     executeAction,
     approveAction,
     rejectAction,
+    vipRules,
+    fetchVipRules,
+    createVipRule,
+    deleteVipRule,
   }
 }

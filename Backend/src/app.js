@@ -7,6 +7,7 @@ const mailRoutes = require('./routes/mail.routes')
 const actionsRoutes = require('./routes/actions.routes')
 const calendarRoutes = require('./routes/calendar.routes')
 const agentRoutes = require('./routes/agent.routes')
+const vipRulesRoutes = require('./routes/vipRules.routes')
 
 const app = express()
 
@@ -18,5 +19,6 @@ app.use('/api/mail', mailRoutes)
 app.use('/api/actions', actionsRoutes)
 app.use('/api/calendar', calendarRoutes)
 app.use('/api/agent', agentRoutes)
+app.use('/api/vip-rules', vipRulesRoutes)
 
 module.exports = app

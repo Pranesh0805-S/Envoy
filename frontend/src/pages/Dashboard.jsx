@@ -8,6 +8,7 @@ import ChatPanel from '../components/avatar/ChatPanel'
 import { BlobAvatar } from '../components/avatar/FloatingAvatar'
 import { useTheme } from '../hooks/useTheme'
 import { AnimatePresence, motion } from 'framer-motion'
+import VipRulesPanel from '../components/ui/VipRulesPanel'
 
 const PRIMARY_CATEGORIES = [
   'Urgent',
@@ -53,6 +54,16 @@ function Dashboard() {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi, I'm Envoy. Ask me about your inbox — what's urgent, what needs a reply, or anything else." }
   ])
+
+  const {
+  // ...existing,
+  vipRules,
+  fetchVipRules,
+  createVipRule,
+  deleteVipRule,
+} = useInboxData()
+
+const [showVipRules, setShowVipRules] = useState(false)
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -491,6 +502,12 @@ function Dashboard() {
                   </div>
                 </div>
               </div>
+              <button
+                onClick={() => setShowVipRules(true)}
+                className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-400 transition"
+              >
+                VIP Rules
+              </button>
 
               <div className="pt-3 border-t border-[var(--glass-border)] text-[10px] text-[var(--text-muted)] flex items-center justify-between">
                 <span>Envoy Engine v1.0</span>
@@ -586,7 +603,14 @@ function Dashboard() {
             </div>
           </div>
         )}
-
+        {showVipRules && (
+          <VipRulesPanel
+            rules={vipRules}
+            onCreate={createVipRule}
+            onDelete={deleteVipRule}
+            onClose={() => setShowVipRules(false)}
+          />
+        )}
         <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
       </main>
 
