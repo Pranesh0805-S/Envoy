@@ -10,28 +10,34 @@ export function useInboxData() {
   const [unsubCandidates, setUnsubCandidates] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
+  const [nextPageToken, setNextPageToken] = useState(null)
+  
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('No active session')
     return { Authorization: `Bearer ${session.access_token}` }
   }
 
-  const fetchDigest = useCallback(async () => {
+  const fetchDigest = useCallback(async (append = false) => {
     setLoading(true)
     setError(null)
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/mail/digest-smart`, { headers })
+      const url = append && nextPageToken
+        ? `${API_BASE}/mail/digest-smart?pageToken=${nextPageToken}`
+        : `${API_BASE}/mail/digest-smart`
+      const res = await fetch(url, { headers })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
-      setCategorized(result.categorized)
+
+      setCategorized((prev) => append ? [...prev, ...result.categorized] : result.categorized)
+      setNextPageToken(result.nextPageToken)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [nextPageToken])
 
   const fetchPendingActions = useCallback(async () => {
     try {
@@ -205,5 +211,6 @@ export function useInboxData() {
     fetchVipRules,
     createVipRule,
     deleteVipRule,
+    nextPageToken,
   }
 }

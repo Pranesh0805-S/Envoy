@@ -25,7 +25,7 @@ async function getFreshAccessToken(userId, accessToken, refreshToken) {
   }
 }
 
-async function getInboxDigest(userId) {
+async function getInboxDigest(userId, pageToken = null, maxResults = 25) {
   const { data: user, error } = await supabase
     .from('users')
     .select('google_access_token, google_refresh_token')
@@ -46,8 +46,9 @@ async function getInboxDigest(userId) {
 
   const listRes = await gmail.users.messages.list({
     userId: 'me',
-    maxResults: 10,
+    maxResults,
     q: 'in:inbox',
+    pageToken: pageToken || undefined,
   })
 
   const messages = listRes.data.messages || []
@@ -62,8 +63,7 @@ async function getInboxDigest(userId) {
       })
 
       const headers = detail.data.payload.headers
-      const getHeader = (name) =>
-        headers.find((h) => h.name === name)?.value || ''
+      const getHeader = (name) => headers.find((h) => h.name === name)?.value || ''
 
       return {
         id: msg.id,
@@ -75,7 +75,7 @@ async function getInboxDigest(userId) {
     })
   )
 
-  return digest
+  return { digest, nextPageToken: listRes.data.nextPageToken || null }
 }
 
 async function deleteEmail(userId, emailId) {

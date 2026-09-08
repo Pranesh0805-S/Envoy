@@ -35,6 +35,7 @@ function Dashboard() {
     executeAction,
     approveAction,
     rejectAction,
+    nextPageToken,
   } = useInboxData()
 
   const { theme, setTheme } = useTheme()
@@ -273,6 +274,16 @@ const [showVipRules, setShowVipRules] = useState(false)
       />
     ))
   }
+
+  {activeTab !== 'Awaiting Reply' && activeTab !== 'Unsubscribe' && nextPageToken && (
+  <button
+    onClick={() => fetchDigest(true)}
+    disabled={loading}
+    className="mt-4 w-full text-xs font-medium px-4 py-2.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition disabled:opacity-50"
+  >
+    {loading ? 'Loading...' : 'Load 25 More'}
+  </button>
+)}
 
   return (
     <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">

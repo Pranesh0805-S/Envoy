@@ -16,7 +16,8 @@ router.get('/digest', verifyAuth, async (req, res) => {
 
 router.get('/digest-smart', verifyAuth, async (req, res) => {
   try {
-    const digest = await getInboxDigest(req.user.id)
+    const pageToken = req.query.pageToken || null
+    const { digest, nextPageToken } = await getInboxDigest(req.user.id, pageToken)
     const categorized = await categorizeInbox(digest)
 
     const merged = categorized.map((item, i) => ({
@@ -30,7 +31,7 @@ router.get('/digest-smart', verifyAuth, async (req, res) => {
     const rules = await getVipRules(req.user.id)
     const final = applyVipRules(merged, digest, rules)
 
-    res.json({ digest, categorized: final })
+    res.json({ digest, categorized: final, nextPageToken })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
