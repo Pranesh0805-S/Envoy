@@ -14,7 +14,7 @@ async function categorizeInbox(emails) {
 
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 3000,
+    max_tokens: 1500,
     system: `You are Envoy, a Gmail management assistant. You help users understand and manage their inbox efficiently.
 
 When given a list of emails (subject, sender, date, snippet), you:

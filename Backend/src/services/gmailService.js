@@ -25,7 +25,7 @@ async function getFreshAccessToken(userId, accessToken, refreshToken) {
   }
 }
 
-async function getInboxDigest(userId, pageToken = null, maxResults = 25) {
+async function getInboxDigest(userId, pageToken = null, maxResults = 10) {
   const { data: user, error } = await supabase
     .from('users')
     .select('google_access_token, google_refresh_token')

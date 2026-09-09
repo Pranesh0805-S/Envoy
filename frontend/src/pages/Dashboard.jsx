@@ -281,7 +281,7 @@ const [showVipRules, setShowVipRules] = useState(false)
     disabled={loading}
     className="mt-4 w-full text-xs font-medium px-4 py-2.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition disabled:opacity-50"
   >
-    {loading ? 'Loading...' : 'Load 25 More'}
+    {loading ? 'Loading...' : 'Load 10 More'}
   </button>
 )}
 
