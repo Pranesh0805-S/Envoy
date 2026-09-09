@@ -25,7 +25,7 @@ async function getFreshAccessToken(userId, accessToken, refreshToken) {
   }
 }
 
-async function getInboxDigest(userId, pageToken = null, maxResults = 10) {
+async function getInboxDigest(userId) {
   const { data: user, error } = await supabase
     .from('users')
     .select('google_access_token, google_refresh_token')
@@ -36,19 +36,13 @@ async function getInboxDigest(userId, pageToken = null, maxResults = 10) {
     throw new Error('No Google account linked for this user')
   }
 
-  const oAuth2Client = await getFreshAccessToken(
-    userId,
-    user.google_access_token,
-    user.google_refresh_token
-  )
-
+  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
 
   const listRes = await gmail.users.messages.list({
     userId: 'me',
-    maxResults,
+    maxResults: 10,
     q: 'in:inbox',
-    pageToken: pageToken || undefined,
   })
 
   const messages = listRes.data.messages || []
@@ -61,10 +55,8 @@ async function getInboxDigest(userId, pageToken = null, maxResults = 10) {
         format: 'metadata',
         metadataHeaders: ['Subject', 'From', 'Date'],
       })
-
       const headers = detail.data.payload.headers
       const getHeader = (name) => headers.find((h) => h.name === name)?.value || ''
-
       return {
         id: msg.id,
         subject: getHeader('Subject'),
@@ -75,7 +67,7 @@ async function getInboxDigest(userId, pageToken = null, maxResults = 10) {
     })
   )
 
-  return { digest, nextPageToken: listRes.data.nextPageToken || null }
+  return digest
 }
 
 async function deleteEmail(userId, emailId) {
