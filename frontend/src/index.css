@@ -140,3 +140,13 @@ input[type="date"], input[type="time"] {
 [data-theme="light"] input[type="time"] {
   color-scheme: light;
 }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+.skeleton {
+  background: var(--glass-fill-strong);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}

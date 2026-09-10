@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { signInWithGoogle } from './lib/auth'
 import Dashboard from './pages/Dashboard'
 import { useTheme } from './hooks/useTheme'
+import NotFound from './pages/NotFound'
 
 function Home() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
