@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useInboxData } from '../hooks/useInboxData'
 import MailCard from '../components/mail/MailCard'
+import MailCardSkeleton from '../components/mail/MailCardSkeleton'
 import { supabase } from '../lib/supabaseClient'
 import Toast from '../components/ui/Toast'
 import ApprovalCard from '../components/mail/ApprovalCard'
@@ -9,6 +10,19 @@ import { BlobAvatar } from '../components/avatar/FloatingAvatar'
 import { useTheme } from '../hooks/useTheme'
 import { AnimatePresence, motion } from 'framer-motion'
 import VipRulesPanel from '../components/ui/VipRulesPanel'
+
+function EmptyState({ message }) {
+  return (
+    <div className="py-20 text-center">
+      <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: 'var(--glass-fill-strong)' }}>
+        <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <p className="text-xs text-[var(--text-muted)]">{message}</p>
+    </div>
+  )
+}
 
 const PRIMARY_CATEGORIES = [
   'Urgent',
@@ -35,6 +49,10 @@ function Dashboard() {
     executeAction,
     approveAction,
     rejectAction,
+    vipRules,
+    fetchVipRules,
+    createVipRule,
+    deleteVipRule,
   } = useInboxData()
 
   const { theme, setTheme } = useTheme()
@@ -55,15 +73,7 @@ function Dashboard() {
     { role: 'assistant', content: "Hi, I'm Envoy. Ask me about your inbox — what's urgent, what needs a reply, or anything else." }
   ])
 
-  const {
-  // ...existing,
-  vipRules,
-  fetchVipRules,
-  createVipRule,
-  deleteVipRule,
-} = useInboxData()
-
-const [showVipRules, setShowVipRules] = useState(false)
+  const [showVipRules, setShowVipRules] = useState(false)
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -99,7 +109,8 @@ const [showVipRules, setShowVipRules] = useState(false)
     fetchPendingActions()
     fetchAwaitingReplies()
     fetchUnsubscribeCandidates()
-  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates])
+    fetchVipRules()
+  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates, fetchVipRules])
 
   function handleCycleTheme() {
     if (theme === 'light') setTheme('dark')
@@ -213,9 +224,13 @@ const [showVipRules, setShowVipRules] = useState(false)
   )
 
   function renderTabContent() {
+    if (loading && activeMails.length === 0 && activeTab !== 'Awaiting Reply' && activeTab !== 'Unsubscribe') {
+      return Array.from({ length: 5 }).map((_, i) => <MailCardSkeleton key={i} />)
+    }
+
     if (activeTab === 'Awaiting Reply') {
       if (awaitingReplies.length === 0) {
-        return <div className="py-20 text-center text-xs text-[var(--text-muted)]">No pending replies</div>
+        return <EmptyState message="No pending replies" />
       }
       return awaitingReplies.map((mail) => (
         <div
@@ -235,7 +250,7 @@ const [showVipRules, setShowVipRules] = useState(false)
 
     if (activeTab === 'Unsubscribe') {
       if (unsubCandidates.length === 0) {
-        return <div className="py-20 text-center text-xs text-[var(--text-muted)]">No unsubscribe candidates found</div>
+        return <EmptyState message="No unsubscribe candidates found" />
       }
       return unsubCandidates.map((c) => (
         <div
@@ -257,11 +272,7 @@ const [showVipRules, setShowVipRules] = useState(false)
     }
 
     if (activeMails.length === 0) {
-      return (
-        <div className="py-20 text-center text-xs text-[var(--text-muted)]">
-          All caught up! No emails in this category.
-        </div>
-      )
+      return <EmptyState message="All caught up! No emails in this category." />
     }
 
     return activeMails.map((mail, i) => (
@@ -521,8 +532,8 @@ const [showVipRules, setShowVipRules] = useState(false)
       {/* 3. CENTER DYNAMIC FEED */}
       <main className="flex-1 min-w-0 px-8 py-5 flex flex-col h-screen overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto flex-1">
-          {/* Flush-Aligned Top Header */}
-          <header className="flex justify-between items-center pb-4 border-b border-[var(--glass-border)] mb-5">
+          {/* Flush-Aligned Top Header — sticky while scrolling */}
+          <header className="sticky top-0 z-20 flex justify-between items-center pb-4 pt-1 border-b border-[var(--glass-border)] mb-5 bg-[var(--bg-base)]">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{activeTab}</h1>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
