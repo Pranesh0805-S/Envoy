@@ -61,9 +61,9 @@ function Dashboard() {
   const [searchFilter, setSearchFilter] = useState('')
   const [bulkProcessing, setBulkProcessing] = useState(false)
 
-  // Sidebar Layout States
-  const [primaryOpen, setPrimaryOpen] = useState(true)
-  const [secondaryOpen, setSecondaryOpen] = useState(true)
+  // Sidebar Layout States — start collapsed on mobile/narrow screens
+  const [primaryOpen, setPrimaryOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 768 : true)
+  const [secondaryOpen, setSecondaryOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 768 : true)
 
   // Unified Copilot Chat State
   const [chatOpen, setChatOpen] = useState(false)
