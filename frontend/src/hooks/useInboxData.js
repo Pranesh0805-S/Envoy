@@ -185,6 +185,34 @@ export function useInboxData() {
     }
   }, [fetchVipRules])
 
+const exportPdf = useCallback(async (mails) => {
+  try {
+    const headers = await getAuthHeader()
+    const res = await fetch(`${API_BASE}/export/pdf`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mails }),
+    })
+
+    if (!res.ok) {
+      const result = await res.json()
+      throw new Error(result.error)
+    }
+
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'envoy-export.pdf'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+      setError(err.message)
+  }
+}, [])
+
   return {
     categorized,
     grouped,
@@ -205,5 +233,6 @@ export function useInboxData() {
     fetchVipRules,
     createVipRule,
     deleteVipRule,
+    exportPdf,
   }
 }

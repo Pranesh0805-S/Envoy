@@ -53,6 +53,7 @@ function Dashboard() {
     fetchVipRules,
     createVipRule,
     deleteVipRule,
+    exportPdf,
   } = useInboxData()
 
   const { theme, setTheme } = useTheme()
@@ -60,12 +61,11 @@ function Dashboard() {
   const [toastMessage, setToastMessage] = useState(null)
   const [searchFilter, setSearchFilter] = useState('')
   const [bulkProcessing, setBulkProcessing] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
 
-  // Sidebar Layout States — start collapsed on mobile/narrow screens
   const [primaryOpen, setPrimaryOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 768 : true)
   const [secondaryOpen, setSecondaryOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 768 : true)
 
-  // Unified Copilot Chat State
   const [chatOpen, setChatOpen] = useState(false)
   const [isCopilotDocked, setIsCopilotDocked] = useState(false)
   const [avatarState, setAvatarState] = useState('idle')
@@ -79,7 +79,6 @@ function Dashboard() {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!session?.provider_token) return
-
         try {
           await fetch('http://localhost:5000/api/auth/save-google-tokens', {
             method: 'POST',
@@ -98,10 +97,7 @@ function Dashboard() {
         }
       }
     )
-
-    return () => {
-      authListener?.subscription?.unsubscribe()
-    }
+    return () => authListener?.subscription?.unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -112,10 +108,24 @@ function Dashboard() {
     fetchVipRules()
   }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates, fetchVipRules])
 
+  // Clear selection whenever the tab changes
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [activeTab])
+
   function handleCycleTheme() {
     if (theme === 'light') setTheme('dark')
     else if (theme === 'dark') setTheme('system')
     else setTheme('light')
+  }
+
+  function toggleSelect(gmailId) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(gmailId)) next.delete(gmailId)
+      else next.add(gmailId)
+      return next
+    })
   }
 
   async function handleSendMessage(text) {
@@ -159,10 +169,20 @@ function Dashboard() {
         mails.map((mail) => executeAction(mail.gmailId, actionType, mail.summary))
       )
       setToastMessage(`Successfully ${actionType}d ${mails.length} emails.`)
+      setSelectedIds(new Set())
     } catch (err) {
       setToastMessage(`Bulk ${actionType} failed: ${err.message}`)
     } finally {
       setBulkProcessing(false)
+    }
+  }
+
+  async function handleExport(mails) {
+    if (!mails.length) return
+    try {
+      await exportPdf(mails)
+    } catch (err) {
+      setToastMessage(`Export failed: ${err.message}`)
     }
   }
 
@@ -223,6 +243,9 @@ function Dashboard() {
     searchFilter ? (m.summary?.toLowerCase().includes(searchFilter.toLowerCase()) || m.subject?.toLowerCase().includes(searchFilter.toLowerCase())) : true
   )
 
+  const selectedMails = activeMails.filter((m) => selectedIds.has(m.gmailId))
+  const hasSelection = selectedMails.length > 0
+
   function renderTabContent() {
     if (loading && activeMails.length === 0 && activeTab !== 'Awaiting Reply' && activeTab !== 'Unsubscribe') {
       return Array.from({ length: 5 }).map((_, i) => <MailCardSkeleton key={i} />)
@@ -281,13 +304,16 @@ function Dashboard() {
         mail={mail}
         onExecute={executeAction}
         onAddToCalendar={handleAddToCalendar}
+        selected={selectedIds.has(mail.gmailId)}
+        onToggleSelect={() => toggleSelect(mail.gmailId)}
       />
     ))
   }
 
+  const isMailTab = activeTab !== 'Awaiting Reply' && activeTab !== 'Unsubscribe'
+
   return (
     <div className="min-h-screen flex bg-[var(--bg-base)] text-[var(--text-primary)] relative">
-      {/* Floating Restore Trigger - ONLY renders when BOTH sidebars are hidden */}
       {!primaryOpen && !secondaryOpen && (
         <button
           onClick={() => {
@@ -303,7 +329,7 @@ function Dashboard() {
         </button>
       )}
 
-      {/* 1. PRIMARY SLIM SIDEBAR */}
+      {/* PRIMARY SLIM SIDEBAR */}
       <AnimatePresence initial={false}>
         {primaryOpen && (
           <motion.aside
@@ -404,7 +430,7 @@ function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* 2. SECONDARY COLLAPSIBLE SIDEBAR */}
+      {/* SECONDARY COLLAPSIBLE SIDEBAR */}
       <AnimatePresence initial={false}>
         {secondaryOpen && (
           <motion.aside
@@ -529,22 +555,23 @@ function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* 3. CENTER DYNAMIC FEED */}
+      {/* CENTER DYNAMIC FEED */}
       <main className="flex-1 min-w-0 px-8 py-5 flex flex-col h-screen overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto flex-1">
-          {/* Flush-Aligned Top Header — sticky while scrolling */}
           <header className="sticky top-0 z-20 flex justify-between items-center pb-4 pt-1 border-b border-[var(--glass-border)] mb-5 bg-[var(--bg-base)]">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{activeTab}</h1>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                AI triage summaries and actionable recommendations.
+                {hasSelection
+                  ? `${selectedMails.length} selected`
+                  : 'AI triage summaries and actionable recommendations.'}
               </p>
             </div>
 
             <div className="flex items-center gap-2.5">
-              {activeTab === 'Newsletter/Promotional' && activeMails.length > 1 && (
+              {isMailTab && activeMails.length > 1 && (
                 <button
-                  onClick={() => handleBulkAction(activeMails, 'archive')}
+                  onClick={() => handleBulkAction(hasSelection ? selectedMails : activeMails, 'archive')}
                   disabled={bulkProcessing}
                   className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition disabled:opacity-50 flex items-center gap-1.5"
                 >
@@ -553,9 +580,20 @@ function Dashboard() {
                       <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
                       Archiving...
                     </>
+                  ) : hasSelection ? (
+                    `Archive selected (${selectedMails.length})`
                   ) : (
                     `Archive all ${activeMails.length}`
                   )}
+                </button>
+              )}
+
+              {isMailTab && activeMails.length > 0 && (
+                <button
+                  onClick={() => handleExport(hasSelection ? selectedMails : activeMails)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--glass-border)] hover:bg-[var(--glass-fill-strong)] transition"
+                >
+                  {hasSelection ? `Export selected (${selectedMails.length})` : 'Export PDF'}
                 </button>
               )}
 
@@ -576,7 +614,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Pending Approvals Tray */}
         {pendingActions.length > 0 && (
           <div className="fixed bottom-24 right-6 w-84 glass-panel-strong rounded-xl p-4 space-y-3 z-40 max-h-[60vh] overflow-y-auto border border-[var(--glass-border)] shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-border)]">
@@ -625,7 +662,6 @@ function Dashboard() {
         <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
       </main>
 
-      {/* 4. DOCKED COPILOT WORKBENCH */}
       <AnimatePresence>
         {isCopilotDocked && (
           <motion.aside
@@ -652,7 +688,6 @@ function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* 5. FLOATING COPILOT TRIGGER & PANEL */}
       {!isCopilotDocked && (
         <>
           <motion.button
