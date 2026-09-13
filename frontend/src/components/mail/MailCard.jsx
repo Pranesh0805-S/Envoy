@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function MailCard({ mail, onExecute, onAddToCalendar }) {
+function MailCard({ mail, onExecute, onAddToCalendar, selected, onToggleSelect }) {
   const [showWhy, setShowWhy] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [manualDate, setManualDate] = useState('')
@@ -82,7 +82,20 @@ function MailCard({ mail, onExecute, onAddToCalendar }) {
   }
 
   return (
-    <div className="group relative rounded-lg p-4 bg-[var(--bg-elevated)] border border-[var(--glass-border)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-400/40 flex items-start justify-between gap-4">
+    <div
+      className="group relative rounded-lg p-4 bg-[var(--bg-elevated)] border shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-400/40 flex items-start justify-between gap-4"
+      style={{ borderColor: selected ? 'var(--accent-primary)' : 'var(--glass-border)' }}
+    >
+      {/* Selection checkbox */}
+      <input
+        type="checkbox"
+        checked={!!selected}
+        onChange={onToggleSelect}
+        onClick={(e) => e.stopPropagation()}
+        title="Select email"
+        className="mt-1.5 w-4 h-4 accent-indigo-600 shrink-0 cursor-pointer"
+      />
+
       {/* Brand Monogram */}
       <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 select-none border border-indigo-500/20">
         {brandInitial}
