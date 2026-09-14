@@ -3,6 +3,7 @@ import { signInWithGoogle } from './lib/auth'
 import Dashboard from './pages/Dashboard'
 import { useTheme } from './hooks/useTheme'
 import NotFound from './pages/NotFound'
+import AvatarWidget from './pages/AvatarWidget'
 
 function Home() {
   return (
@@ -19,13 +20,14 @@ function Home() {
 }
 
 function App() {
-  useTheme() // applies theme globally on mount + listens for changes
+  useTheme()
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/avatar-widget" element={<AvatarWidget />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

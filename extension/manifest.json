@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Envoy — AI Gmail Assistant",
+  "version": "1.0.0",
+  "description": "An AI-powered floating assistant for Gmail, categorizing and managing your inbox.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "http://localhost:5000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content-script.js"],
+      "css": ["content-style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Envoy"
+  }
+}
