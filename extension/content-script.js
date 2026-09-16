@@ -13,12 +13,12 @@
     border: none;
     z-index: 999999;
     background: transparent;
+    color-scheme: light;
     pointer-events: none;
   `
   document.body.appendChild(iframe)
 
-  // Allow pointer events only on the visible avatar/chat area, not the whole transparent iframe box
   iframe.onload = () => {
-    iframe.style.pointerEvents = 'auto'
+    // pointer-events handled inside AvatarWidget/FloatingAvatar via CSS instead
   }
 })()

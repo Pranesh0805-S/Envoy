@@ -65,13 +65,13 @@ envoy/
 │       ├── middleware/   # Auth verification
 │       ├── routes/       # auth, mail, calendar, agent, actions
 │       └── services/     # Gmail, Calendar, Claude agent logic
-├── frontend/
-│   └── src/
-│       ├── components/   # avatar, mail cards, UI (sidebar, toast)
-│       ├── hooks/        # useInboxData, useTheme
-│       ├── lib/          # Supabase client, auth helpers
-│       └── pages/        # Dashboard (main workbench)
-└── extension/            # (planned) Chrome extension
+└── frontend/
+    └── src/
+        ├── components/   # avatar, mail cards, UI (sidebar, toast)
+        ├── hooks/        # useInboxData, useTheme
+        ├── lib/          # Supabase client, auth helpers
+        └── pages/        # Dashboard (main workbench)
+
 ```
 
 ## Screenshots
@@ -79,6 +79,5 @@ envoy/
 *(add 2-3 screenshots here — workbench with categorized tabs, the avatar chat panel with a draft, and the light/dark theme toggle)*
 
 ## Roadmap
-- Chrome extension (inject avatar directly into Gmail)
 - Multi-account support
 - Export inbox to PDF/DOCX
