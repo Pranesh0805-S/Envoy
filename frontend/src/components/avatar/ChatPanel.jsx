@@ -7,8 +7,9 @@ const SUGGESTED_PROMPTS = [
   "Find unreplied threads"
 ]
 
-function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock }) {
+function ChatPanel({ messages, onSend, onClose, onSaveDraft, loading, isDocked, onToggleDock }) {
   const [input, setInput] = useState('')
+  const [savedIndex, setSavedIndex] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -27,6 +28,12 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
       e.preventDefault()
       handleSend()
     }
+  }
+
+  async function handleSaveDraft(draft, index) {
+    if (!onSaveDraft) return
+    await onSaveDraft(draft)
+    setSavedIndex(index)
   }
 
   return (
@@ -113,13 +120,26 @@ function ChatPanel({ messages, onSend, onClose, loading, isDocked, onToggleDock 
                   <p><span className="opacity-60">Subject:</span> {m.draft.subject}</p>
                 </div>
                 <p className="whitespace-pre-wrap text-[11px] opacity-90">{m.draft.body}</p>
-                <button
-                  onClick={() => navigator.clipboard.writeText(m.draft.body)}
-                  className="mt-2 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded transition"
-                  style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
-                >
-                  Copy Draft
-                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(m.draft.body)}
+                    className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded transition"
+                    style={{ background: 'var(--accent-primary)', color: 'var(--accent-primary-text)' }}
+                  >
+                    Copy Draft
+                  </button>
+
+                  {onSaveDraft && (
+                    <button
+                      onClick={() => handleSaveDraft(m.draft, i)}
+                      disabled={savedIndex === i}
+                      className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded transition disabled:opacity-60"
+                      style={{ background: 'var(--accent-success)', color: '#fff' }}
+                    >
+                      {savedIndex === i ? 'Saved to Gmail ✓' : 'Save as Draft'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

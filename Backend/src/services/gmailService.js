@@ -212,6 +212,41 @@ async function getUnsubscribeCandidates(userId) {
   return candidates
 }
 
+async function createDraft(userId, to, subject, body) {
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('google_access_token, google_refresh_token')
+    .eq('id', userId)
+    .single()
+
+  if (error || !user?.google_refresh_token) {
+    throw new Error('No Google account linked for this user')
+  }
+
+  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+  const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
+
+  const message = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    '',
+    body,
+  ].join('\n')
+
+  const encodedMessage = Buffer.from(message)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+  const draft = await gmail.users.drafts.create({
+    userId: 'me',
+    requestBody: { message: { raw: encodedMessage } },
+  })
+
+  return draft.data
+}
+
 module.exports = {
   getInboxDigest,
   getFreshAccessToken,
@@ -219,4 +254,5 @@ module.exports = {
   archiveEmail,
   getAwaitingReplies,
   getUnsubscribeCandidates,
+  createDraft,
 }

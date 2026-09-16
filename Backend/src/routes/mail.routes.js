@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const verifyAuth = require('../middleware/auth')
-const { getInboxDigest, getAwaitingReplies, getUnsubscribeCandidates } = require('../services/gmailService')
+const { getInboxDigest, getAwaitingReplies, getUnsubscribeCandidates, createDraft } = require('../services/gmailService')
 const { categorizeInbox } = require('../services/agentService')
 const { getVipRules, applyVipRules } = require('../services/vipRulesService')
 
@@ -49,6 +49,19 @@ router.get('/unsubscribe-candidates', verifyAuth, async (req, res) => {
   try {
     const candidates = await getUnsubscribeCandidates(req.user.id)
     res.json({ candidates })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.post('/draft', verifyAuth, async (req, res) => {
+  try {
+    const { to, subject, body } = req.body
+    if (!to || !subject || !body) {
+      return res.status(400).json({ error: 'to, subject, and body are all required' })
+    }
+    const draft = await createDraft(req.user.id, to, subject, body)
+    res.json({ draft })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
