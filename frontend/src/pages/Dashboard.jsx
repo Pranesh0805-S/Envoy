@@ -168,6 +168,7 @@ function Dashboard() {
       setToastMessage('Draft saved to Gmail!')
     } catch (err) {
       setToastMessage(`Failed to save draft: ${err.message}`)
+      throw err
     }
   }
 

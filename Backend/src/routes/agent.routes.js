@@ -15,7 +15,7 @@ router.post('/chat', verifyAuth, async (req, res) => {
     const categorized = await categorizeInbox(digest)
 
     const contextSummary = categorized
-      .map((m, i) => `${i + 1}. [${m.category}] ${m.summary} (gmailId: ${digest[i]?.id})`)
+      .map((m, i) => `${i + 1}. [${m.category}] ${m.summary} (gmailId: ${digest[i]?.id}, from: ${digest[i]?.from || 'unknown'})`)
       .join('\n')
 
     const response = await anthropic.messages.create({
@@ -26,11 +26,15 @@ router.post('/chat', verifyAuth, async (req, res) => {
 Current inbox summary:
 ${contextSummary}
 
+Each inbox item includes a "from" field like "Sierra ODC <hr@sierraodc.com>" — the actual email address is inside the angle brackets.
+
 Rules:
-- If the user asks you to draft, write, or compose a reply/email, respond with a JSON object wrapped in [[DRAFT]] and [[/DRAFT]] tags containing: {"to": "recipient email or name", "subject": "...", "body": "..."}. Write the draft body professionally and concisely based on context from the relevant email.
+- If the user asks you to draft, write, or compose a reply/email, respond with a JSON object wrapped in [[DRAFT]] and [[/DRAFT]] tags containing: {"to": "...", "subject": "...", "body": "..."}.
+- The "to" field MUST be a real, valid email address (e.g. "hr@sierraodc.com"), extracted from the relevant email's "from" field — never a display name, company name, or team name on its own. If a "from" field is "Name <email@domain.com>", use only the "email@domain.com" part.
+- If you genuinely cannot find a matching email address in the inbox summary for what the user is asking about, do NOT output a [[DRAFT]] block — instead, reply in plain text asking the user to provide the recipient's email address.
+- Write the draft body professionally and concisely based on context from the relevant email.
 - For everything else, respond normally in plain conversational text.
-- You cannot send emails directly — only draft them for the user to review and send themselves.
-- Never fabricate email addresses you don't have context for — if unsure, use the sender name and note the user should confirm the address.`,
+- You cannot send emails directly — only draft them for the user to review and send themselves.`,
       messages: [
         ...history,
         { role: 'user', content: message },
