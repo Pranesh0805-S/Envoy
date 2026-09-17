@@ -185,33 +185,50 @@ export function useInboxData() {
     }
   }, [fetchVipRules])
 
-const exportPdf = useCallback(async (mails) => {
-  try {
-    const headers = await getAuthHeader()
-    const res = await fetch(`${API_BASE}/export/pdf`, {
-      method: 'POST',
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mails }),
-    })
+  const exportPdf = useCallback(async (mails) => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/export/pdf`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mails }),
+      })
 
-    if (!res.ok) {
-      const result = await res.json()
-      throw new Error(result.error)
+      if (!res.ok) {
+        const result = await res.json()
+        throw new Error(result.error)
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'envoy-export.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+        setError(err.message)
     }
+  }, [])
 
-    const blob = await res.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'envoy-export.pdf'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
+  const createDraft = useCallback(async (to, subject, body) => {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/mail/draft`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, body }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      return result.draft
+    } catch (err) {
       setError(err.message)
-  }
-}, [])
+      throw err
+    }
+  }, [])
 
   return {
     categorized,
@@ -234,5 +251,6 @@ const exportPdf = useCallback(async (mails) => {
     createVipRule,
     deleteVipRule,
     exportPdf,
+    createDraft,
   }
 }

@@ -54,6 +54,7 @@ function Dashboard() {
     createVipRule,
     deleteVipRule,
     exportPdf,
+    createDraft,
   } = useInboxData()
 
   const { theme, setTheme } = useTheme()
@@ -158,6 +159,15 @@ function Dashboard() {
     } catch (err) {
       setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
       setAvatarState('idle')
+    }
+  }
+
+  async function handleSaveDraft(draft) {
+    try {
+      await createDraft(draft.to, draft.subject, draft.body)
+      setToastMessage('Draft saved to Gmail!')
+    } catch (err) {
+      setToastMessage(`Failed to save draft: ${err.message}`)
     }
   }
 
@@ -360,19 +370,7 @@ function Dashboard() {
                 </svg>
               </button>
 
-              <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-[var(--glass-border)]">
-                <button
-                  onClick={() => {
-                    setActiveTab('Newsletter/Promotional')
-                    if (!secondaryOpen) setSecondaryOpen(true)
-                  }}
-                  title="Workbench"
-                  className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-600 text-white shadow-sm"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                  </svg>
-                </button>
+              <div className="flex flex-col items-center gap-1 pt-2 border-t border-[var(--glass-border)] w-full">
                 <button
                   onClick={() => {
                     setActiveTab('Awaiting Reply')
@@ -675,6 +673,7 @@ function Dashboard() {
               <ChatPanel
                 messages={messages}
                 onSend={handleSendMessage}
+                onSaveDraft={handleSaveDraft}
                 onClose={() => {
                   setChatOpen(false)
                   setIsCopilotDocked(false)
@@ -720,6 +719,7 @@ function Dashboard() {
               <ChatPanel
                 messages={messages}
                 onSend={handleSendMessage}
+                onSaveDraft={handleSaveDraft}
                 onClose={() => setChatOpen(false)}
                 loading={avatarState === 'thinking'}
                 isDocked={false}
