@@ -7,7 +7,7 @@ export async function signInWithGoogle() {
       scopes: 'https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/calendar',
       queryParams: {
         access_type: 'offline',
-        prompt: 'consent',
+        prompt: 'consent select_account',
       },
       redirectTo: `${window.location.origin}/dashboard`,
     },

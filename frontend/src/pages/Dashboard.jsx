@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useInboxData } from '../hooks/useInboxData'
+import { useLinkedAccounts } from '../hooks/useLinkedAccounts'
 import MailCard from '../components/mail/MailCard'
 import MailCardSkeleton from '../components/mail/MailCardSkeleton'
 import { supabase } from '../lib/supabaseClient'
@@ -10,6 +11,7 @@ import { BlobAvatar } from '../components/avatar/FloatingAvatar'
 import { useTheme } from '../hooks/useTheme'
 import { AnimatePresence, motion } from 'framer-motion'
 import VipRulesPanel from '../components/ui/VipRulesPanel'
+import AccountSwitcher from '../components/ui/AccountSwitcher'
 
 function EmptyState({ message }) {
   return (
@@ -57,6 +59,8 @@ function Dashboard() {
     createDraft,
   } = useInboxData()
 
+  const { accounts, activeAccountId, selectAccount, fetchAccounts } = useLinkedAccounts()
+
   const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState('Newsletter/Promotional')
   const [toastMessage, setToastMessage] = useState(null)
@@ -93,21 +97,29 @@ function Dashboard() {
               expires_at: session.expires_at,
             }),
           })
+          // A new/refreshed account was just linked — refresh the list
+          await fetchAccounts()
         } catch (err) {
           console.error('Failed to save Google tokens:', err.message)
         }
       }
     )
     return () => authListener?.subscription?.unsubscribe()
-  }, [])
+  }, [fetchAccounts])
 
   useEffect(() => {
-    fetchDigest()
+    fetchAccounts()
     fetchPendingActions()
-    fetchAwaitingReplies()
-    fetchUnsubscribeCandidates()
     fetchVipRules()
-  }, [fetchDigest, fetchPendingActions, fetchAwaitingReplies, fetchUnsubscribeCandidates, fetchVipRules])
+  }, [fetchAccounts, fetchPendingActions, fetchVipRules])
+
+  // Whenever the active Gmail account changes, reload account-scoped data
+  useEffect(() => {
+    if (!activeAccountId) return
+    fetchDigest(activeAccountId)
+    fetchAwaitingReplies(activeAccountId)
+    fetchUnsubscribeCandidates(activeAccountId)
+  }, [activeAccountId, fetchDigest, fetchAwaitingReplies, fetchUnsubscribeCandidates])
 
   // Clear selection whenever the tab changes
   useEffect(() => {
@@ -143,7 +155,7 @@ function Dashboard() {
         .slice(0, -1)
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const res = await fetch('http://localhost:5000/api/agent/chat', {
+      const res = await fetch(`http://localhost:5000/api/agent/chat?linkedAccountId=${activeAccountId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ message: text, history }),
@@ -164,7 +176,7 @@ function Dashboard() {
 
   async function handleSaveDraft(draft) {
     try {
-      await createDraft(draft.to, draft.subject, draft.body)
+      await createDraft(draft.to, draft.subject, draft.body, activeAccountId)
       setToastMessage('Draft saved to Gmail!')
     } catch (err) {
       setToastMessage(`Failed to save draft: ${err.message}`)
@@ -177,7 +189,7 @@ function Dashboard() {
     setBulkProcessing(true)
     try {
       await Promise.all(
-        mails.map((mail) => executeAction(mail.gmailId, actionType, mail.summary))
+        mails.map((mail) => executeAction(mail.gmailId, actionType, mail.summary, activeAccountId))
       )
       setToastMessage(`Successfully ${actionType}d ${mails.length} emails.`)
       setSelectedIds(new Set())
@@ -200,7 +212,7 @@ function Dashboard() {
   async function handleApproveAllPending() {
     const actions = [...pendingActions]
     for (const action of actions) {
-      await approveAction(action.id)
+      await approveAction(action.id, activeAccountId)
     }
     setToastMessage(`Approved all ${actions.length} actions.`)
   }
@@ -221,7 +233,7 @@ function Dashboard() {
     const end = new Date(start.getTime() + 60 * 60 * 1000)
 
     try {
-      const res = await fetch('http://localhost:5000/api/calendar/create-event', {
+      const res = await fetch(`http://localhost:5000/api/calendar/create-event?linkedAccountId=${activeAccountId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +325,7 @@ function Dashboard() {
       <MailCard
         key={mail.gmailId || i}
         mail={mail}
-        onExecute={executeAction}
+        onExecute={(gmailId, actionType, subject) => executeAction(gmailId, actionType, subject, activeAccountId)}
         onAddToCalendar={handleAddToCalendar}
         selected={selectedIds.has(mail.gmailId)}
         onToggleSelect={() => toggleSelect(mail.gmailId)}
@@ -461,6 +473,12 @@ function Dashboard() {
                   </span>
                 </div>
 
+                <AccountSwitcher
+                  accounts={accounts}
+                  activeAccountId={activeAccountId}
+                  onSelect={selectAccount}
+                />
+
                 <div className="relative">
                   <input
                     type="text"
@@ -597,7 +615,7 @@ function Dashboard() {
               )}
 
               <button
-                onClick={fetchDigest}
+                onClick={() => fetchDigest(activeAccountId)}
                 disabled={loading}
                 className="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition disabled:opacity-50"
               >
@@ -642,7 +660,7 @@ function Dashboard() {
                   <ApprovalCard
                     key={action.id}
                     action={action}
-                    onApprove={(id) => approveAction(id)}
+                    onApprove={(id) => approveAction(id, activeAccountId)}
                     onReject={(id) => rejectAction(id)}
                   />
                 )

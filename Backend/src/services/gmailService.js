@@ -2,20 +2,20 @@ const { google } = require('googleapis')
 const { getOAuthClient } = require('../config/googleApis')
 const supabase = require('../config/supabase')
 
-async function getFreshAccessToken(userId, accessToken, refreshToken) {
+async function getFreshAccessToken(linkedAccountId, accessToken, refreshToken) {
   const oAuth2Client = getOAuthClient(accessToken, refreshToken)
 
   try {
     const { credentials } = await oAuth2Client.refreshAccessToken()
     await supabase
-      .from('users')
+      .from('linked_accounts')
       .update({
         google_access_token: credentials.access_token,
         token_expires_at: credentials.expiry_date
           ? new Date(credentials.expiry_date)
           : null,
       })
-      .eq('id', userId)
+      .eq('id', linkedAccountId)
 
     oAuth2Client.setCredentials(credentials)
     return oAuth2Client
@@ -25,18 +25,8 @@ async function getFreshAccessToken(userId, accessToken, refreshToken) {
   }
 }
 
-async function getInboxDigest(userId) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  if (error || !user?.google_refresh_token) {
-    throw new Error('No Google account linked for this user')
-  }
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function getInboxDigest(linkedAccount) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
 
   const listRes = await gmail.users.messages.list({
@@ -70,29 +60,15 @@ async function getInboxDigest(userId) {
   return digest
 }
 
-async function deleteEmail(userId, emailId) {
-  const { data: user } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function deleteEmail(linkedAccount, emailId) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
-
   await gmail.users.messages.trash({ userId: 'me', id: emailId })
 }
 
-async function archiveEmail(userId, emailId) {
-  const { data: user } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function archiveEmail(linkedAccount, emailId) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
-
   await gmail.users.messages.modify({
     userId: 'me',
     id: emailId,
@@ -100,18 +76,8 @@ async function archiveEmail(userId, emailId) {
   })
 }
 
-async function getAwaitingReplies(userId, daysThreshold = 3) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  if (error || !user?.google_refresh_token) {
-    throw new Error('No Google account linked for this user')
-  }
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function getAwaitingReplies(linkedAccount, daysThreshold = 3) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
 
   const listRes = await gmail.users.messages.list({
@@ -122,7 +88,6 @@ async function getAwaitingReplies(userId, daysThreshold = 3) {
 
   const messages = listRes.data.messages || []
   const cutoff = Date.now() - daysThreshold * 24 * 60 * 60 * 1000
-
   const awaitingReplies = []
 
   for (const msg of messages) {
@@ -160,18 +125,8 @@ async function getAwaitingReplies(userId, daysThreshold = 3) {
   return awaitingReplies
 }
 
-async function getUnsubscribeCandidates(userId) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  if (error || !user?.google_refresh_token) {
-    throw new Error('No Google account linked for this user')
-  }
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function getUnsubscribeCandidates(linkedAccount) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
 
   const listRes = await gmail.users.messages.list({
@@ -212,26 +167,11 @@ async function getUnsubscribeCandidates(userId) {
   return candidates
 }
 
-async function createDraft(userId, to, subject, body) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('google_access_token, google_refresh_token')
-    .eq('id', userId)
-    .single()
-
-  if (error || !user?.google_refresh_token) {
-    throw new Error('No Google account linked for this user')
-  }
-
-  const oAuth2Client = await getFreshAccessToken(userId, user.google_access_token, user.google_refresh_token)
+async function createDraft(linkedAccount, to, subject, body) {
+  const oAuth2Client = await getFreshAccessToken(linkedAccount.id, linkedAccount.google_access_token, linkedAccount.google_refresh_token)
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client })
 
-  const message = [
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    '',
-    body,
-  ].join('\n')
+  const message = [`To: ${to}`, `Subject: ${subject}`, '', body].join('\n')
 
   const encodedMessage = Buffer.from(message)
     .toString('base64')

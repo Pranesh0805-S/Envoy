@@ -1,18 +1,19 @@
 const express = require('express')
 const router = express.Router()
 const verifyAuth = require('../middleware/auth')
+const resolveLinkedAccount = require('../middleware/linkedAccount')
 const Anthropic = require('@anthropic-ai/sdk')
 const { getInboxDigest } = require('../services/gmailService')
 const { categorizeInbox } = require('../services/agentService')
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-router.post('/chat', verifyAuth, async (req, res) => {
+router.post('/chat', verifyAuth, resolveLinkedAccount, async (req, res) => {
   try {
     const { message, history = [] } = req.body
 
-    const digest = await getInboxDigest(req.user.id)
-    const categorized = await categorizeInbox(digest)
+    const digest = await getInboxDigest(req.linkedAccount)
+    const categorized = await categorizeInbox(digest, req.linkedAccount.id)
 
     const contextSummary = categorized
       .map((m, i) => `${i + 1}. [${m.category}] ${m.summary} (gmailId: ${digest[i]?.id}, from: ${digest[i]?.from || 'unknown'})`)
@@ -42,8 +43,6 @@ Rules:
     })
 
     const rawReply = response.content[0].text
-
-    // Check if response contains a draft
     const draftMatch = rawReply.match(/\[\[DRAFT\]\]([\s\S]*?)\[\[\/DRAFT\]\]/)
 
     if (draftMatch) {

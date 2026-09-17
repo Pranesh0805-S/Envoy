@@ -1,10 +1,11 @@
 const Anthropic = require('@anthropic-ai/sdk')
+const supabase = require('../config/supabase')
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-async function categorizeInbox(emails) {
+async function categorizeWithHaiku(emails) {
   const emailListText = emails
     .map(
       (mail, i) =>
@@ -43,8 +44,6 @@ Example with a meeting:
   })
 
   const responseText = message.content[0].text
-
-  // Strip markdown code fences if present
   const cleaned = responseText
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
@@ -52,13 +51,71 @@ Example with a meeting:
     .trim()
 
   try {
-    const parsed = JSON.parse(cleaned)
-    console.log('Parsed categorization:', JSON.stringify(parsed, null, 2))
-    return parsed
+    return JSON.parse(cleaned)
   } catch (err) {
     console.error('Failed to parse agent response as JSON:', cleaned)
     throw new Error('Agent returned invalid JSON')
   }
+}
+
+// emails: array with .id = gmail message id, matching digest order
+// linkedAccountId: which Gmail account these emails belong to
+async function categorizeInbox(emails, linkedAccountId) {
+  const gmailIds = emails.map((m) => m.id)
+
+  const { data: cached, error: cacheErr } = await supabase
+    .from('email_categorizations')
+    .select('*')
+    .eq('linked_account_id', linkedAccountId)
+    .in('gmail_message_id', gmailIds)
+
+  if (cacheErr) console.error('Cache lookup failed, falling back to full categorization:', cacheErr.message)
+
+  const cachedMap = new Map((cached || []).map((c) => [c.gmail_message_id, c]))
+  const uncached = emails.filter((m) => !cachedMap.has(m.id))
+
+  let freshResults = []
+  if (uncached.length > 0) {
+    const raw = await categorizeWithHaiku(uncached)
+    // raw[i].id is a 1-based index into `uncached`, not the gmail id — map it back
+    freshResults = raw.map((r, i) => ({
+      ...r,
+      gmailMessageId: uncached[i].id,
+    }))
+
+    await supabase.from('email_categorizations').insert(
+      freshResults.map((r) => ({
+        linked_account_id: linkedAccountId,
+        gmail_message_id: r.gmailMessageId,
+        category: r.category,
+        confidence: r.confidence,
+        reasoning: r.reasoning,
+        is_meeting: r.isMeeting,
+        meeting_time: r.meetingTime,
+        needs_action: r.needsAction,
+        summary: r.summary,
+      }))
+    )
+  }
+
+  // Return in the same order as the original `emails` array
+  return emails.map((mail) => {
+    const c = cachedMap.get(mail.id)
+    if (c) {
+      return {
+        id: mail.id,
+        category: c.category,
+        needsAction: c.needs_action,
+        isMeeting: c.is_meeting,
+        meetingTime: c.meeting_time,
+        confidence: c.confidence,
+        reasoning: c.reasoning,
+        summary: c.summary,
+      }
+    }
+    const fresh = freshResults.find((r) => r.gmailMessageId === mail.id)
+    return { ...fresh, id: mail.id }
+  })
 }
 
 module.exports = { categorizeInbox }

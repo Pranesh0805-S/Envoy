@@ -10,30 +10,32 @@ export function useInboxData() {
   const [unsubCandidates, setUnsubCandidates] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  
+
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('No active session')
     return { Authorization: `Bearer ${session.access_token}` }
   }
 
-  const fetchDigest = useCallback(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const headers = await getAuthHeader()
-        const res = await fetch(`${API_BASE}/mail/digest-smart`, { headers })
-        const result = await res.json()
-        if (!res.ok) throw new Error(result.error)
-        setCategorized(result.categorized)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }, [])
+  const fetchDigest = useCallback(async (linkedAccountId) => {
+    if (!linkedAccountId) return
+    setLoading(true)
+    setError(null)
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`${API_BASE}/mail/digest-smart?linkedAccountId=${linkedAccountId}`, { headers })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error)
+      setCategorized(result.categorized)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   const fetchPendingActions = useCallback(async () => {
+    // unchanged — pending_actions table is not linked-account scoped
     try {
       const headers = await getAuthHeader()
       const res = await fetch(`${API_BASE}/actions/pending`, { headers })
@@ -45,10 +47,11 @@ export function useInboxData() {
     }
   }, [])
 
-  const fetchAwaitingReplies = useCallback(async () => {
+  const fetchAwaitingReplies = useCallback(async (linkedAccountId) => {
+    if (!linkedAccountId) return
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/mail/awaiting-replies`, { headers })
+      const res = await fetch(`${API_BASE}/mail/awaiting-replies?linkedAccountId=${linkedAccountId}`, { headers })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
       setAwaitingReplies(result.awaitingReplies)
@@ -57,10 +60,11 @@ export function useInboxData() {
     }
   }, [])
 
-  const fetchUnsubscribeCandidates = useCallback(async () => {
+  const fetchUnsubscribeCandidates = useCallback(async (linkedAccountId) => {
+    if (!linkedAccountId) return
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/mail/unsubscribe-candidates`, { headers })
+      const res = await fetch(`${API_BASE}/mail/unsubscribe-candidates?linkedAccountId=${linkedAccountId}`, { headers })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
       setUnsubCandidates(result.candidates)
@@ -86,10 +90,10 @@ export function useInboxData() {
     }
   }, [fetchPendingActions])
 
-  const executeAction = useCallback(async (gmailId, actionType, subject = '') => {
+  const executeAction = useCallback(async (gmailId, actionType, subject = '', linkedAccountId) => {
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/actions/execute`, {
+      const res = await fetch(`${API_BASE}/actions/execute?linkedAccountId=${linkedAccountId}`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ actionType, emailId: gmailId, payload: { subject } }),
@@ -102,10 +106,10 @@ export function useInboxData() {
     }
   }, [])
 
-  const approveAction = useCallback(async (actionId) => {
+  const approveAction = useCallback(async (actionId, linkedAccountId) => {
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/actions/${actionId}/approve`, {
+      const res = await fetch(`${API_BASE}/actions/${actionId}/approve?linkedAccountId=${linkedAccountId}`, {
         method: 'POST',
         headers,
       })
@@ -209,14 +213,14 @@ export function useInboxData() {
       a.remove()
       window.URL.revokeObjectURL(url)
     } catch (err) {
-        setError(err.message)
+      setError(err.message)
     }
   }, [])
 
-  const createDraft = useCallback(async (to, subject, body) => {
+  const createDraft = useCallback(async (to, subject, body, linkedAccountId) => {
     try {
       const headers = await getAuthHeader()
-      const res = await fetch(`${API_BASE}/mail/draft`, {
+      const res = await fetch(`${API_BASE}/mail/draft?linkedAccountId=${linkedAccountId}`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ to, subject, body }),

@@ -1,10 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const verifyAuth = require('../middleware/auth')
+const resolveLinkedAccount = require('../middleware/linkedAccount')
 const { createPendingAction, getPendingActions, updateActionStatus } = require('../services/approvalQueue')
 const { deleteEmail, archiveEmail } = require('../services/gmailService')
 
-// Propose an action (goes into pending queue, nothing executes yet) — used for bulk actions
 router.post('/propose', verifyAuth, async (req, res) => {
   try {
     const { actionType, emailId, payload } = req.body
@@ -15,7 +15,6 @@ router.post('/propose', verifyAuth, async (req, res) => {
   }
 })
 
-// List pending actions awaiting approval
 router.get('/pending', verifyAuth, async (req, res) => {
   try {
     const actions = await getPendingActions(req.user.id)
@@ -25,15 +24,14 @@ router.get('/pending', verifyAuth, async (req, res) => {
   }
 })
 
-// Approve — actually executes the Gmail action
-router.post('/:id/approve', verifyAuth, async (req, res) => {
+router.post('/:id/approve', verifyAuth, resolveLinkedAccount, async (req, res) => {
   try {
     const action = await updateActionStatus(req.user.id, req.params.id, 'approved')
 
     if (action.action_type === 'delete') {
-      await deleteEmail(req.user.id, action.target_email_id)
+      await deleteEmail(req.linkedAccount, action.target_email_id)
     } else if (action.action_type === 'archive') {
-      await archiveEmail(req.user.id, action.target_email_id)
+      await archiveEmail(req.linkedAccount, action.target_email_id)
     }
 
     res.json({ success: true, action })
@@ -42,7 +40,6 @@ router.post('/:id/approve', verifyAuth, async (req, res) => {
   }
 })
 
-// Reject — just marks it rejected, no Gmail call
 router.post('/:id/reject', verifyAuth, async (req, res) => {
   try {
     const action = await updateActionStatus(req.user.id, req.params.id, 'rejected')
@@ -52,16 +49,15 @@ router.post('/:id/reject', verifyAuth, async (req, res) => {
   }
 })
 
-// Execute — propose + approve in one call, used for inline single-card confirmation
-router.post('/execute', verifyAuth, async (req, res) => {
+router.post('/execute', verifyAuth, resolveLinkedAccount, async (req, res) => {
   try {
     const { actionType, emailId, payload } = req.body
     const action = await createPendingAction(req.user.id, actionType, emailId, payload)
 
     if (actionType === 'delete') {
-      await deleteEmail(req.user.id, emailId)
+      await deleteEmail(req.linkedAccount, emailId)
     } else if (actionType === 'archive') {
-      await archiveEmail(req.user.id, emailId)
+      await archiveEmail(req.linkedAccount, emailId)
     }
 
     await updateActionStatus(req.user.id, action.id, 'approved')
